@@ -20,7 +20,8 @@ template<class S>
 class Node
 {
 public:
-	Node() {}
+	Node() {
+	}
 
 	virtual size_t getNumChildren() const = 0;
 
@@ -37,41 +38,25 @@ public:
 		if(mIsHashValid)
 			return mCachedHash;
 
-		mCachedHash = computeHash();\
+		mCachedHash = computeHash();
 		mIsHashValid = true;
 	}
 
 	virtual uint64_t getHashId() const { return 0; }
 
-//	void collectNodes(CodeGenerator<S> &generator) const {
-
-//		// does the generator already have a same-hashed node?
-//		const Node* hashedNode = generator.getHashedNode(this);
-//		if(hashedNode)
-//			return;
-
-//		// let's add this node
-//		S eval;
-//		if(false/*evaluate(eval)*/) {
-//			// add a const node or something ...
-//		}
-//		else {
-//			generator.addNode(this);
-//			for (int i = 0; i < getNumChildren(); ++i) {
-//				Sp<const Node<S>> child = getChild(i);
-//				child->collectNodes(generator);
-//			}
-//		}
-//	}
-
 	static uint64_t rol(uint64_t x, int d) {
 		return (x << d) | (x >> (64-d));
 	}
 
-private:
+//protected:
 	virtual uint64_t computeHash() const = 0;
 
-private:
+	void init() {
+		mCachedHash = this->computeHash();
+		mIsHashValid = true;
+	}
+
+protected:
 	mutable bool mIsHashValid = false;
 	mutable uint64_t mCachedHash;
 };
@@ -124,55 +109,87 @@ public:
 		return it->second.second;
 	}
 
-	const Node<S>* getHashedNode(const Node<S>* node) const {
-		auto it = mHashedNodes.find(node->getHash());
+	const Node<S>* getHashedNode(size_t nodeHash) const {
+		auto it = mHashedNodes.find(nodeHash);
 		if(it != mHashedNodes.end())
 			return it->second.first;
 		else
 			return nullptr;
 	}
 
+	const Node<S>* getHashedNode(const Node<S>* node) const {
+		return getHashedNode(node->getHash());
+	}
+
 	void collectNodes(const Node<S>* rootNode) {
 
-		// go through graph and collect nodes
-		const Node<S>* nodeVisiting = rootNode;
+		// this is where we store all nodes that we still need to visit
 		std::vector<const Node<S>*> nodesToVisit;
+
+		// node we are currently visiting
+		const Node<S>* nodeVisiting = rootNode;
+
+		// go through graph and visit nodes
 		while (true) {
 			// does the generator already have a same-hashed node?
 			const Node<S>* hashedNode = getHashedNode(nodeVisiting);
+			// if not, let's add it and remember to visit children
 			if(!hashedNode) {
-				// let's add this node
 				addNode(nodeVisiting);
 				for (int i = 0; i < nodeVisiting->getNumChildren(); ++i) {
 					nodesToVisit.push_back(nodeVisiting->getChild(i).get());
 				}
 			}
+			else {
+				std::cout << "node already in!\n";
+			}
 
 			// let's go to next node
 			if(nodesToVisit.size() == 0) break;
-//			nodeVisiting = nodesToVisit.top();
-//			nodesToVisit.pop();
-			nodeVisiting = nodesToVisit.back();
-			nodesToVisit.pop_back();
+			nodeVisiting = nodesToVisit.front();
+			nodesToVisit.erase(nodesToVisit.begin());
 		}
 
+
+		std::vector<size_t> nodesNew;
+		for (auto h : mNodes) {
+			const Node<S>* node = mHashedNodes[h].first;
+			addChildrenTo(node, nodesNew);
+		}
+
+		mNodes = nodesNew;
 	}
 
 	std::string generateCode() {
 
 		// update variable index
 		int counter = 0;
-		for (int i = mNodes.size()-1; i >= 0; --i) {
+		for (int i = 0; i < mNodes.size(); ++i) {
 			mHashedNodes[mNodes[i]].second.setIndex(counter++);
 		}
 
 		// write code
 		std::string code;
-		for (int i = mNodes.size()-1; i >= 0; --i) {
+		for (int i = 0; i < mNodes.size(); ++i) {
 			code += mVarTypeName + " " + mHashedNodes[mNodes[i]].second.getVarName() + " = " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
+//			code += std::to_string(mNodes[i]) + "\n";
+//			code += std::to_string(mHashedNodes[mNodes[i]].first) + "\n";
 		}
 
 		return code;
+	}
+
+private:
+	void addChildrenTo(const Node<S>* node, std::vector<size_t> &nodesNew) const {
+		// is this node already in the new list?
+		if(std::find(nodesNew.begin(), nodesNew.end(), node->getHash()) == nodesNew.end()) {
+			// first make sure children are added
+			for (int i = 0; i < node->getNumChildren(); ++i) {
+				addChildrenTo(node->getChild(i).get(), nodesNew);
+			}
+			// and then add this node
+			nodesNew.push_back(node->getHash());
+		}
 	}
 
 private:
@@ -186,7 +203,9 @@ class NodeConst : public Node<S>
 {
 public:
 	NodeConst (S value)
-		: mValue(value){}
+		: mValue(value){
+		this->init();
+	}
 
 	virtual size_t getNumChildren() const {
 		return 0;
@@ -225,7 +244,9 @@ class NodeVar : public Node<S>
 {
 public:
 	NodeVar (const std::string &varName)
-		: mVarName(varName){}
+		: mVarName(varName) {
+		this->init();
+	}
 
 	virtual size_t getNumChildren() const {
 		return 0;
@@ -264,7 +285,9 @@ class NodeNeg : public Node<S>
 {
 public:
 	NodeNeg (Sp<Node<S>> node)
-		: mNode(node) {}
+		: mNode(node) {
+		this->init();
+	}
 
 	virtual size_t getNumChildren() const {
 		return 1;
@@ -334,7 +357,9 @@ class NodeAdd : public NodeBinaryOperation<S>
 public:
 
 	NodeAdd(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {}
+		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		this->init();
+	}
 
 	virtual S evaluate() const {
 		return this->mNodeA->evaluate() + this->mNodeB->evaluate();
@@ -367,7 +392,9 @@ class NodeSub : public NodeBinaryOperation<S>
 public:
 
 	NodeSub(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {}
+		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		this->init();
+	}
 
 	virtual S evaluate() const {
 		return this->mNodeA->evaluate() - this->mNodeB->evaluate();
@@ -400,7 +427,9 @@ class NodeMul : public NodeBinaryOperation<S>
 {
 public:
 	NodeMul(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {}
+		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		this->init();
+	}
 
 	virtual S evaluate() const {
 		return this->mNodeA->evaluate() * this->mNodeB->evaluate();
@@ -432,7 +461,9 @@ class NodeDiv : public NodeBinaryOperation<S>
 {
 public:
 	NodeDiv(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {}
+		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		this->init();
+	}
 
 	virtual S evaluate() const {
 		return this->mNodeA->evaluate() / this->mNodeB->evaluate();

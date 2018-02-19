@@ -23,7 +23,7 @@ TEST(CodeGenTest, SimpleTest) {
 		using namespace CodeGen;
 
 //	RecType<double> v1("a");
-		RecType<double> v1 = 0.24;
+	RecType<double> v1 = 0.24;
 	RecType<double> v0 = 1.4;
 	RecType<double> v2 = v0-v1;
 	v2 = v0+(v2+v1)*2.0;
@@ -65,6 +65,25 @@ TEST(CodeGenTest, SimpleTest) {
 	}
 }
 
+TEST(CodeGenTest, SimpleTest2) {
+	using namespace CodeGen;
+
+	RecType<double> a("a");
+	RecType<double> b("b");
+
+	RecType<double> c = a*b;
+	RecType<double> d = a*b;
+	RecType<double> e = c+d;
+
+//	std::cout << v2.getNode()->evaluate() << std::endl;
+
+	e.printCode();
+
+	{
+	}
+}
+
+
 
 /*****************
 TODO:
@@ -76,11 +95,11 @@ TODO:
 *****************/
 
 TEST(CodeGenTest, AutoDiff) {
-		using namespace CodeGen;
+	using namespace CodeGen;
 
-		typedef AutoDiffT<RecType<double>, RecType<double>> AD;
+	typedef AutoDiffT<RecType<double>, RecType<double>> AD;
 
-		AD a("a");
+	AD a("a");
 	a.deriv() = 1.0;
 	AD b = a*a*a + a*2.0;
 	AD c = b*b;
@@ -94,30 +113,30 @@ TEST(CodeGenTest, AutoDiff) {
 		std::cout << "dc/da = " << 2.*(pow(a,3) + 2.*a)*(3.*pow(a,2) + 2) << std::endl;
 	}
 
-//	{
-//		double a = 3;
+	{
+		double a = 3;
 
-//		double v6 = 0.000000;
-//		double v8 = 1.000000;
-//		double v15 = 2.000000;
-//		double v11 = v5 + v10;
-//		double v13 = v12 * v14;
-//		double v16 = v14 * v15;
-//		double v17 = v13 + v16;
-//		double v0 = v11 * v17;
-//		double v1 = v8 * v12;
-//		double v12 = v14 * v14;
-//		double v2 = v8 * v14;
-//		double v3 = v2 + v2;
-//		double v4 = v3 * v14;
-//		double v5 = v1 + v4;
-//		double v7 = v6 * v14;
-//		double v9 = v8 * v15;
-//		double v10 = v7 + v9;
-//		double v14 = a;
-//		double v18 = v11 * v17;
-//		double v19 = v0 + v18;
+		double v3 = 1.000000;
+		double v5 = a;
+		double v0 = v3 * v5;
+		double v1 = 0.000000;
+		double v2 = v0 + v0;
+		double v4 = 2.000000;
+		double v6 = v5 * v5;
+		double v7 = v3 * v4;
+		double v8 = v1 * v5;
+		double v9 = v2 * v5;
+		double v10 = v3 * v6;
+		double v11 = v5 * v4;
+		double v12 = v6 * v5;
+		double v13 = v8 + v7;
+		double v14 = v10 + v9;
+		double v15 = v12 + v11;
+		double v16 = v14 + v13;
+		double v17 = v16 * v15;
+		double v18 = v16 * v15;
+		double v19 = v18 + v17;
 
-//		std::cout << v18 << std::endl;
-//	}
+		std::cout << v19 << std::endl;
+	}
 }
