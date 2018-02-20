@@ -9,8 +9,8 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace CodeGen;
 using namespace Eigen;
 
-typedef RecType<double> R;
-typedef Matrix<R, 3, 1> Vector3R;
+typedef RecType<double> Rad;
+typedef Matrix<Rad, 3, 1> Vector3Rad;
 
 double computeCG(const Vector3d &a) {
 
@@ -53,15 +53,15 @@ double computeByHand(const Vector3d &a) {
 
 void generateCode() {
 
-	Vector3R a;
-	a(0) = R("a0");
-	a(1) = R("a1");
-	a(2) = R("a2");
+	Vector3Rad a;
+	a(0) = Rad("a0");
+	a(1) = Rad("a1");
+	a(2) = Rad("a2");
 
-	Vector3R b;
+	Vector3Rad b;
 	b << 3, 4, 5;
 
-	R n = a.dot(a) + a.norm() + a.dot(b) + b.norm();
+	Rad n = a.dot(a) + a.norm() + a.dot(b) + b.norm();
 
 	n.printCode();
 }

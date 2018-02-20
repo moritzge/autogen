@@ -77,10 +77,18 @@ target_link_libraries(Example1
     ${PROJECT_NAME}
 )
 
-# example1
+# example2
 file(GLOB src_ex2 ${CMAKE_CURRENT_SOURCE_DIR}/examples/example2.cpp)
 add_executable(Example2 ${src_ex2})
 set_target_properties(Example2 PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(Example2
+    ${PROJECT_NAME}
+)
+
+# example3
+file(GLOB src_ex3 ${CMAKE_CURRENT_SOURCE_DIR}/examples/example3.cpp)
+add_executable(Example3 ${src_ex3})
+set_target_properties(Example3 PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(Example3
     ${PROJECT_NAME}
 )

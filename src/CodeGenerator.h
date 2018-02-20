@@ -135,6 +135,7 @@ public:
 			const Node<S>* hashedNode = getHashedNode(nodeVisiting);
 			// if not, let's add it and remember to visit children
 			if(!hashedNode) {
+
 				addNode(nodeVisiting);
 				for (int i = 0; i < nodeVisiting->getNumChildren(); ++i) {
 					nodesToVisit.push_back(nodeVisiting->getChild(i).get());
@@ -172,7 +173,9 @@ public:
 		// write code
 		std::string code;
 		for (int i = 0; i < mNodes.size(); ++i) {
-			code += mVarTypeName + " " + mHashedNodes[mNodes[i]].second.getVarName() + " = " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
+			code += mVarTypeName;
+			code += " " + mHashedNodes[mNodes[i]].second.getVarName();
+			code += " = " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
 //			code += std::to_string(mNodes[i]) + "\n";
 //			code += std::to_string(mHashedNodes[mNodes[i]].first) + "\n";
 		}
@@ -282,10 +285,51 @@ private:
 };
 
 template<class S>
+class NodeResult : public Node<S>
+{
+public:
+	NodeResult (const std::string &varName)
+		: mVarName(varName) {
+		this->init();
+	}
+
+	virtual size_t getNumChildren() const {
+		return 0;
+	}
+
+	virtual Sp<const Node<S>> getChild(size_t i) const {
+		throw std::logic_error("NodeVar does not have any children");
+	}
+
+
+	virtual S evaluate() const {
+		throw std::logic_error("cannot evaluate a variable name");
+		return 0;
+	}
+
+	virtual bool evaluate(S &value) const {
+		return false;
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return mVarName;
+	}
+
+	virtual uint64_t computeHash() const {
+		std::hash<std::string> hashS;
+		return hashS(mVarName);
+	}
+
+private:
+	std::string mVarName;
+
+};
+
+template<class S>
 class NodeNeg : public Node<S>
 {
 public:
-	NodeNeg (Sp<Node<S>> node)
+	NodeNeg (Sp<const Node<S>> node)
 		: mNode(node) {
 		this->init();
 	}
@@ -324,7 +368,7 @@ public:
 	virtual uint64_t getHashId() const { return 1; }
 
 private:
-	Sp<Node<S>> mNode;
+	Sp<const Node<S>> mNode;
 
 };
 
@@ -332,7 +376,7 @@ template<class S>
 class NodeBinaryOperation : public Node<S>
 {
 public:
-	NodeBinaryOperation (Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
+	NodeBinaryOperation (Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
 		: mNodeA(nodeA), mNodeB(nodeB){}
 
 	virtual size_t getNumChildren() const {
@@ -349,8 +393,8 @@ public:
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const = 0;
 
 protected:
-	Sp<Node<S>> mNodeA;
-	Sp<Node<S>> mNodeB;
+	Sp<const Node<S>> mNodeA;
+	Sp<const Node<S>> mNodeB;
 };
 
 template<class S>
@@ -358,7 +402,7 @@ class NodeAdd : public NodeBinaryOperation<S>
 {
 public:
 
-	NodeAdd(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
+	NodeAdd(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
 		: NodeBinaryOperation<S>(nodeA, nodeB) {
 		this->init();
 	}
@@ -368,7 +412,7 @@ public:
 	}
 
 	virtual bool evaluate(S &value) const {
-		double valA, valB;
+		S valA, valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA + valB;
@@ -393,7 +437,7 @@ class NodeSub : public NodeBinaryOperation<S>
 {
 public:
 
-	NodeSub(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
+	NodeSub(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
 		: NodeBinaryOperation<S>(nodeA, nodeB) {
 		this->init();
 	}
@@ -403,7 +447,7 @@ public:
 	}
 
 	virtual bool evaluate(S &value) const {
-		double valA, valB;
+		S valA, valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA - valB;
@@ -428,7 +472,7 @@ template<class S>
 class NodeMul : public NodeBinaryOperation<S>
 {
 public:
-	NodeMul(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
+	NodeMul(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
 		: NodeBinaryOperation<S>(nodeA, nodeB) {
 		this->init();
 	}
@@ -438,7 +482,7 @@ public:
 	}
 
 	virtual bool evaluate(S &value) const {
-		double valA, valB;
+		S valA, valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA * valB;
@@ -462,7 +506,7 @@ template<class S>
 class NodeDiv : public NodeBinaryOperation<S>
 {
 public:
-	NodeDiv(Sp<Node<S>> nodeA, Sp<Node<S>> nodeB)
+	NodeDiv(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
 		: NodeBinaryOperation<S>(nodeA, nodeB) {
 		this->init();
 	}
@@ -472,7 +516,7 @@ public:
 	}
 
 	virtual bool evaluate(S &value) const {
-		double valA, valB;
+		S valA, valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA / valB;
@@ -496,7 +540,7 @@ template<class S>
 class NodeSqrt : public Node<S>
 {
 public:
-	NodeSqrt (Sp<Node<S>> node)
+	NodeSqrt (Sp<const Node<S>> node)
 		: mNode(node) {
 		this->init();
 	}
@@ -535,7 +579,7 @@ public:
 	virtual uint64_t getHashId() const { return 7; }
 
 private:
-	Sp<Node<S>> mNode;
+	Sp<const Node<S>> mNode;
 
 };
 
@@ -549,7 +593,7 @@ public:
 		mNode = Sp<Node<S>>(new NodeConst<S>(value));
 	}
 
-	RecType(Sp<Node<S>> node)
+	RecType(Sp<const Node<S>> node)
 		: mNode(node) {
 
 	}
@@ -563,7 +607,23 @@ public:
 	}
 
 	RecType<S> operator+(const RecType<S> &other) const {
-		return RecType<S>(Sp<Node<S>>(new NodeAdd<S>(mNode, other.mNode)));
+		Sp<const Node<S>> node(new NodeAdd<S>(mNode, other.mNode));
+
+		S value;
+		// 0+x = x
+		if(mNode->evaluate(value) && (value == 0 || value == -0)){
+			node = other.mNode;
+		}
+		// x+0 = x
+		else if(other.mNode->evaluate(value) && (value == 0 || value == -0)){
+			node = mNode;
+		}
+		// constant expression?
+		else if(node->evaluate(value)){
+			node.reset(new NodeConst<S>(value));
+		}
+
+		return RecType<S>(node);
 	}
 
 	RecType<S> &operator+=(const RecType<S> &other) {
@@ -572,7 +632,27 @@ public:
 	}
 
 	RecType<S> operator-(const RecType<S> &other) const {
-		return RecType<S>(Sp<Node<S>>(new NodeSub<S>(mNode, other.mNode)));
+		Sp<const Node<S>> node(new NodeSub<S>(mNode, other.mNode));
+
+		S value;
+		// 0-x = x
+		if(mNode->evaluate(value) && (value == 0 || value == -0)){
+			node = other.mNode;
+		}
+		// x-0 = x
+		else if(other.mNode->evaluate(value) && (value == 0 || value == -0)){
+			node = mNode;
+		}
+		// x-x = 0
+		else if(mNode->getHash() == other.mNode->getHash()){
+			node.reset(new NodeConst<S>(0));
+		}
+		// constant expression?
+		else if(node->evaluate(value)){
+			node.reset(new NodeConst<S>(value));
+		}
+
+		return RecType<S>(node);
 	}
 
 	RecType<S> &operator-=(const RecType<S> &other) {
@@ -581,7 +661,33 @@ public:
 	}
 
 	RecType<S> operator*(const RecType<S> &other) const {
-		return RecType<S>(Sp<Node<S>>(new NodeMul<S>(mNode, other.mNode)));
+		Sp<const Node<S>> node(new NodeMul<S>(mNode, other.mNode));
+
+		S value;
+		// 0*x or 0*x = 0
+		if((mNode->evaluate(value) && value == 0) || (other.mNode->evaluate(value) && value == 0)){
+			node.reset(new NodeConst<S>(0));
+		}
+		// evaluatable?
+		else if(node->evaluate(value)) {
+			node.reset(new NodeConst<S>(value));
+		}
+		// 1*x = x
+		else if(mNode->evaluate(value) && value == 1){
+			node = other.mNode;
+		}
+		// x*1 = x
+		else if(other.mNode->evaluate(value) && value == 1){
+			node = mNode;
+		}
+		// -1*x = -x
+		else if(mNode->evaluate(value) && value == -1)
+			node.reset(new NodeNeg<S>(other.mNode));
+		// x*-1 = -x
+		else if(other.mNode->evaluate(value) && value == -1)
+			node.reset(new NodeNeg<S>(mNode));
+
+		return RecType<S>(node);
 	}
 
 	RecType<S> &operator*=(const RecType<S> &other) {
@@ -590,7 +696,23 @@ public:
 	}
 
 	RecType<S> operator/(const RecType<S> &other) const {
-		return RecType<S>(Sp<Node<S>>(new NodeDiv<S>(mNode, other.mNode)));
+		Sp<const Node<S>> node(new NodeDiv<S>(mNode, other.mNode));
+
+		S value;
+		if(mNode->evaluate(value) && value == 0){
+			node.reset(new NodeConst<S>(0));
+		}
+		// TODO: what to do when divided by 0?
+		else if(other.mNode->evaluate(value) && value == 1){
+			node = mNode;
+		}
+		else if(node->evaluate(value)) {
+			node.reset(new NodeConst<S>(value));
+		}
+
+		return RecType<S>(node);
+
+		return RecType<S>(Sp<const Node<S>>(new NodeDiv<S>(mNode, other.mNode)));
 	}
 
 	RecType<S> &operator/=(const RecType<S> &other) {
@@ -598,7 +720,7 @@ public:
 		return *this;
 	}
 
-	Sp<Node<S>> getNode() const {
+	Sp<const Node<S>> getNode() const {
 		assert(mNode != nullptr);
 		return mNode;
 	}
@@ -614,7 +736,7 @@ public:
 	}
 
 private:
-	std::shared_ptr<Node<S>> mNode;
+	std::shared_ptr<const Node<S>> mNode;
 };
 
 template<class S>
@@ -629,7 +751,7 @@ RecType<S> operator*(S value, const RecType<S> &other) {
 
 template<class S>
 RecType<S> sqrt(const RecType<S> &other) {
-	return RecType<S>(Sp<Node<S>>(new NodeSqrt<S>(other.getNode())));
+	return RecType<S>(Sp<const Node<S>>(new NodeSqrt<S>(other.getNode())));
 }
 
 }

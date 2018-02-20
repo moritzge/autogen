@@ -183,8 +183,8 @@ AutoDiffT<ValueT, DerivT> atan2(const AutoDiffT<ValueT, DerivT> &y, const AutoDi
 template<class ValueT, class DerivT>
 AutoDiffT<ValueT, DerivT> sqrt(const AutoDiffT<ValueT, DerivT> &s)
 {
-	if(s.value() == ValueT(0))
-		return 0;
+//	if(s.value() == ValueT(0))
+//		return 0;
 
 	// D(sqrt(x)) = 1.0/2.0 * 1.0/sqrt(x) * dx
 	return AutoDiffT<ValueT, DerivT>(sqrt(s.value()),
