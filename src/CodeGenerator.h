@@ -578,3 +578,4 @@ RecType<S> operator*(S value, const RecType<S> &other) {
 }
 
 }
+

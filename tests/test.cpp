@@ -109,34 +109,33 @@ TEST(CodeGenTest, AutoDiff) {
 //	std::cout << c.deriv().getNode()->evaluate() << std::endl;
 
 	{
-			double a = 3;
+		double a = 3;
 		std::cout << "dc/da = " << 2.*(pow(a,3) + 2.*a)*(3.*pow(a,2) + 2) << std::endl;
 	}
 
 	{
 		double a = 3;
 
-		double v3 = 1.000000;
-		double v5 = a;
-		double v0 = v3 * v5;
-		double v1 = 0.000000;
-		double v2 = v0 + v0;
-		double v4 = 2.000000;
-		double v6 = v5 * v5;
-		double v7 = v3 * v4;
-		double v8 = v1 * v5;
-		double v9 = v2 * v5;
-		double v10 = v3 * v6;
-		double v11 = v5 * v4;
-		double v12 = v6 * v5;
-		double v13 = v8 + v7;
-		double v14 = v10 + v9;
-		double v15 = v12 + v11;
-		double v16 = v14 + v13;
-		double v17 = v16 * v15;
-		double v18 = v16 * v15;
-		double v19 = v18 + v17;
+		double v0 = 1.000000;
+		double v1 = a;
+		double v2 = v1 * v1;
+		double v3 = v0 * v2;
+		double v4 = v0 * v1;
+		double v5 = v4 + v4;
+		double v6 = v5 * v1;
+		double v7 = v3 + v6;
+		double v8 = 0.000000;
+		double v9 = v8 * v1;
+		double v10 = 2.000000;
+		double v11 = v0 * v10;
+		double v12 = v9 + v11;
+		double v13 = v7 + v12;
+		double v14 = v2 * v1;
+		double v15 = v1 * v10;
+		double v16 = v14 + v15;
+		double v17 = v13 * v16;
+		double v18 = v17 + v17;
 
-		std::cout << v19 << std::endl;
+		std::cout << v18 << std::endl;
 	}
 }

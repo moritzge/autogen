@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 # set name of the project
 project(AutoGen CXX)
 
+set (CMAKE_CXX_STANDARD 11)
+
 set(AUTOGEN_EIGEN_NO_DEBUG FALSE CACHE BOOL "Disable Eigen asserts")
 if (AUTOGEN_EIGEN_NO_DEBUG)
     add_definitions(-DEIGEN_NO_DEBUG)
@@ -24,6 +26,15 @@ if (WIN32)
     add_compile_options(/MP)
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O1")
+
+# AutoGen Library ################################################################
 # add source files
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
 
@@ -39,8 +50,7 @@ target_include_directories(
 		${EIGEN3_INCLUDE_DIR}
 )
 
-
-# Tests
+# Tests ##########################################################################
 enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
@@ -57,6 +67,20 @@ target_link_libraries(${PROJECT_NAME}_test
     -lpthread) # need pthread for google test. TODO: does this link on Windows?
 add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
 
+# Examples #######################################################################
 
+# example1
+file(GLOB src_ex1 ${CMAKE_CURRENT_SOURCE_DIR}/examples/example1.cpp)
+add_executable(Example1 ${src_ex1})
+set_target_properties(Example1 PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(Example1
+    ${PROJECT_NAME}
+)
 
-# set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "_CMakeTargets")
+# example1
+file(GLOB src_ex2 ${CMAKE_CURRENT_SOURCE_DIR}/examples/example2.cpp)
+add_executable(Example2 ${src_ex2})
+set_target_properties(Example2 PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(Example2
+    ${PROJECT_NAME}
+)
