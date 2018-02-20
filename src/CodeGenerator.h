@@ -149,8 +149,9 @@ public:
 			nodeVisiting = nodesToVisit.front();
 			nodesToVisit.erase(nodesToVisit.begin());
 		}
+	}
 
-
+	void sortNodes(){
 		std::vector<size_t> nodesNew;
 		for (auto h : mNodes) {
 			const Node<S>* node = mHashedNodes[h].first;
@@ -294,6 +295,7 @@ public:
 	}
 
 	virtual Sp<const Node<S>> getChild(size_t i) const {
+		assert(i == 0);
 		return mNode;
 	}
 
@@ -491,10 +493,57 @@ public:
 };
 
 template<class S>
+class NodeSqrt : public Node<S>
+{
+public:
+	NodeSqrt (Sp<Node<S>> node)
+		: mNode(node) {
+		this->init();
+	}
+
+	virtual size_t getNumChildren() const {
+		return 1;
+	}
+
+	virtual Sp<const Node<S>> getChild(size_t i) const {
+		assert(i == 0);
+		return mNode;
+	}
+
+
+	virtual S evaluate() const {
+		return sqrt(mNode->evaluate());
+	}
+
+	virtual bool evaluate(S &value) const {
+		if(mNode->evaluate(value))
+		{
+			value = sqrt(value);
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return "sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
+	}
+
+	virtual uint64_t computeHash() const {
+		return this->rol(mNode->computeHash(), 3) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const { return 7; }
+
+private:
+	Sp<Node<S>> mNode;
+
+};
+
+template<class S>
 class RecType
 {
 public:
-//	RecType() {}
+	RecType() {}
 
 	RecType(const S &value) {
 		mNode = Sp<Node<S>>(new NodeConst<S>(value));
@@ -559,6 +608,7 @@ public:
 //		mNode->collectNodes(generator);
 
 		generator.collectNodes(mNode.get());
+		generator.sortNodes();
 
 		std::cout << generator.generateCode();
 	}
@@ -575,6 +625,11 @@ RecType<S> operator+(S value, const RecType<S> &other) {
 template<class S>
 RecType<S> operator*(S value, const RecType<S> &other) {
 	return RecType<S>(value) * other;
+}
+
+template<class S>
+RecType<S> sqrt(const RecType<S> &other) {
+	return RecType<S>(Sp<Node<S>>(new NodeSqrt<S>(other.getNode())));
 }
 
 }
