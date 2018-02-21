@@ -43,19 +43,19 @@ void computeGradientCG(const Vector3d &a, Vector3d &g) {
 	double v22 = v14 / v16;
 	double v23 = v21 * v22;
 	double v24 = v18 - v23;
+	double v25 = v8 + v8;
+	double v26 = v25 * v17;
+	double v27 = v20 * v25;
+	double v28 = v27 * v22;
+	double v29 = v26 - v28;
+	double v30 = v11 + v11;
+	double v31 = v30 * v17;
+	double v32 = v20 * v30;
+	double v33 = v32 * v22;
+	double v34 = v31 - v33;
 	g(0) = v24;
-	double v26 = v8 + v8;
-	double v27 = v26 * v17;
-	double v28 = v20 * v26;
-	double v29 = v28 * v22;
-	double v30 = v27 - v29;
-	g(1) = v30;
-	double v32 = v11 + v11;
-	double v33 = v32 * v17;
-	double v34 = v20 * v32;
-	double v35 = v34 * v22;
-	double v36 = v33 - v35;
-	g(2) = v36;
+	g(1) = v29;
+	g(2) = v34;
 
 }
 

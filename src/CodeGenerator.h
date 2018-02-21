@@ -115,6 +115,8 @@ public:
 		return it->second.second;
 	}
 
+	const std::string &getVarTypeName() const { return mVarTypeName; }
+
 	const Node<S>* getHashedNode(uint64_t nodeHash) const {
 		auto it = mHashedNodes.find(nodeHash);
 		if(it != mHashedNodes.end())
@@ -210,8 +212,7 @@ public:
 		// write code
 		std::string code;
 		for (int i = 0; i < mNodes.size(); ++i) {
-			code += mVarTypeName;
-			code += " " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
+			code += mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
 		}
 
 		return code;
@@ -265,7 +266,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = " + std::to_string(mValue);
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + std::to_string(mValue);
 	}
 
 	virtual uint64_t computeHash() const {
@@ -306,7 +307,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = " + mVarName;
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + mVarName;
 	}
 
 	virtual NodeType getNodeType() const {
@@ -402,7 +403,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return "-" + generator.getVar(mNode.get()).getVarName();
+		return generator.getVarTypeName() + "= -" + generator.getVar(mNode.get()).getVarName();
 	}
 
 	virtual uint64_t computeHash() const {
@@ -434,7 +435,11 @@ public:
 		throw std::logic_error("NodeBinaryOperation has only two children");
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const = 0;
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(mNodeB.get()).getVarName();
+	}
+
+	virtual std::string getOpName() const = 0;
 
 protected:
 	Sp<const Node<S>> mNodeA;
@@ -465,9 +470,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " + " + generator.getVar(this->mNodeB.get()).getVarName();
-	}
+	virtual std::string getOpName() const { return "+"; }
 
 	virtual uint64_t computeHash() const {
 		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 3) + getHashId();
@@ -500,9 +503,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " - " + generator.getVar(this->mNodeB.get()).getVarName();
-	}
+	virtual std::string getOpName() const { return "-"; }
 
 	// order of subtraction matters, thus different rolling shift (3, 5)
 	virtual uint64_t computeHash() const {
@@ -535,9 +536,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " * " + generator.getVar(this->mNodeB.get()).getVarName();
-	}
+	virtual std::string getOpName() const { return "*"; }
 
 	virtual uint64_t computeHash() const {
 		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 3) + getHashId();
@@ -569,9 +568,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " / " + generator.getVar(this->mNodeB.get()).getVarName();
-	}
+	virtual std::string getOpName() const { return "/"; }
 
 	virtual uint64_t computeHash() const {
 		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 5) + getHashId();
@@ -613,7 +610,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this).getVarName() + " = sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
 	}
 
 	virtual uint64_t computeHash() const {
