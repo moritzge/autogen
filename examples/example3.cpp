@@ -4,6 +4,7 @@
 #include <CodeGenerator.h>
 #include <AutoDiff.h>
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -17,46 +18,241 @@ template <class S> using Vector3 = Matrix<S, 3, 1>;
 template <class S> using Matrix3 = Matrix<S, 3, 3>;
 
 void computeGradientCG(const Vector3d &a, Vector3d &g) {
+	double v0 = a(1);
+	double v1 = a(2);
+	double v2 = a(0);
+	double v3 = 0.500000;
+	double v4 = 4.000000;
+	double v5 = v0 + v4;
+	double v6 = v5 * v1;
+	double v7 = 5.000000;
+	double v8 = v1 + v7;
+	double v9 = v8 * v0;
+	double v10 = v6 - v9;
+	double v11 = v10 * v10;
+	double v12 = v8 * v2;
+	double v13 = 3.000000;
+	double v14 = v2 + v13;
+	double v15 = v14 * v1;
+	double v16 = v12 - v15;
+	double v17 = v16 * v16;
+	double v18 = v14 * v0;
+	double v19 = v5 * v2;
+	double v20 = v18 - v19;
+	double v21 = v20 * v20;
+	double v22 = v17 + v21;
+	double v23 = v11 + v22;
+	double v24 = sqrt(v23);
+	double v25 = v3 / v24;
+	double v26 = v8 - v1;
+	double v27 = v26 * v16;
+	double v28 = v27 + v27;
+	double v29 = v0 - v5;
+	double v30 = v29 * v20;
+	double v31 = v30 + v30;
+	double v32 = v28 + v31;
+	double v33 = v25 * v32;
+	double v34 = v14 * v14;
+	double v35 = v5 * v5;
+	double v36 = v8 * v8;
+	double v37 = v35 + v36;
+	double v38 = v34 + v37;
+	double v39 = v33 * v38;
+	double v40 = v14 + v14;
+	double v41 = v40 * v24;
+	double v42 = v39 + v41;
+	double v43 = v1 - v8;
+	double v44 = v43 * v10;
+	double v45 = v44 + v44;
+	double v46 = v14 - v2;
+	double v47 = v46 * v20;
+	double v48 = v47 + v47;
+	double v49 = v45 + v48;
+	double v50 = v25 * v49;
+	double v51 = v50 * v38;
+	double v52 = v5 + v5;
+	double v53 = v52 * v24;
+	double v54 = v51 + v53;
+	double v55 = v5 - v0;
+	double v56 = v55 * v10;
+	double v57 = v56 + v56;
+	double v58 = v2 - v14;
+	double v59 = v58 * v16;
+	double v60 = v59 + v59;
+	double v61 = v57 + v60;
+	double v62 = v25 * v61;
+	double v63 = v62 * v38;
+	double v64 = v8 + v8;
+	double v65 = v64 * v24;
+	double v66 = v63 + v65;
+	g(0) = v42;
+	g(1) = v54;
+	g(2) = v66;
 
+}
+
+void computeHessianCG(const Vector3d &a, Matrix3d &hess) {
 	double v0 = a(0);
 	double v1 = a(1);
 	double v2 = a(2);
 	double v3 = 3.000000;
 	double v4 = v0 + v3;
 	double v5 = v4 + v4;
-	double v6 = v4 * v4;
+	double v6 = 0.500000;
 	double v7 = 4.000000;
 	double v8 = v1 + v7;
-	double v9 = v8 * v8;
+	double v9 = v8 * v2;
 	double v10 = 5.000000;
 	double v11 = v2 + v10;
-	double v12 = v11 * v11;
-	double v13 = v9 + v12;
-	double v14 = v6 + v13;
-	double v15 = sqrt(v14);
-	double v16 = v15 * v15;
-	double v17 = v15 / v16;
-	double v18 = v5 * v17;
-	double v19 = 0.500000;
-	double v20 = v19 / v15;
-	double v21 = v20 * v5;
-	double v22 = v14 / v16;
-	double v23 = v21 * v22;
-	double v24 = v18 - v23;
-	double v25 = v8 + v8;
-	double v26 = v25 * v17;
-	double v27 = v20 * v25;
-	double v28 = v27 * v22;
-	double v29 = v26 - v28;
-	double v30 = v11 + v11;
-	double v31 = v30 * v17;
-	double v32 = v20 * v30;
-	double v33 = v32 * v22;
-	double v34 = v31 - v33;
-	g(0) = v24;
-	g(1) = v29;
-	g(2) = v34;
-
+	double v12 = v11 * v1;
+	double v13 = v9 - v12;
+	double v14 = v13 * v13;
+	double v15 = v11 * v0;
+	double v16 = v4 * v2;
+	double v17 = v15 - v16;
+	double v18 = v17 * v17;
+	double v19 = v4 * v1;
+	double v20 = v8 * v0;
+	double v21 = v19 - v20;
+	double v22 = v21 * v21;
+	double v23 = v18 + v22;
+	double v24 = v14 + v23;
+	double v25 = sqrt(v24);
+	double v26 = v6 / v25;
+	double v27 = v11 - v2;
+	double v28 = v27 * v17;
+	double v29 = v28 + v28;
+	double v30 = v1 - v8;
+	double v31 = v30 * v21;
+	double v32 = v31 + v31;
+	double v33 = v29 + v32;
+	double v34 = v26 * v33;
+	double v35 = v5 * v34;
+	double v36 = v27 * v27;
+	double v37 = v36 + v36;
+	double v38 = v30 * v30;
+	double v39 = v38 + v38;
+	double v40 = v37 + v39;
+	double v41 = v40 * v26;
+	double v42 = v25 * v25;
+	double v43 = v6 / v42;
+	double v44 = v34 * v43;
+	double v45 = -v44;
+	double v46 = v45 * v33;
+	double v47 = v41 + v46;
+	double v48 = v4 * v4;
+	double v49 = v8 * v8;
+	double v50 = v11 * v11;
+	double v51 = v49 + v50;
+	double v52 = v48 + v51;
+	double v53 = v47 * v52;
+	double v54 = v35 + v53;
+	double v55 = 2.000000;
+	double v56 = v55 * v25;
+	double v57 = v35 + v56;
+	double v58 = v54 + v57;
+	double v59 = v8 + v8;
+	double v60 = v59 * v34;
+	double v61 = v4 - v0;
+	double v62 = v61 * v30;
+	double v63 = v62 + v62;
+	double v64 = v63 * v26;
+	double v65 = v2 - v11;
+	double v66 = v65 * v13;
+	double v67 = v66 + v66;
+	double v68 = v61 * v21;
+	double v69 = v68 + v68;
+	double v70 = v67 + v69;
+	double v71 = v26 * v70;
+	double v72 = v71 * v43;
+	double v73 = -v72;
+	double v74 = v73 * v33;
+	double v75 = v64 + v74;
+	double v76 = v75 * v52;
+	double v77 = v60 + v76;
+	double v78 = v71 * v5;
+	double v79 = v77 + v78;
+	double v80 = v11 + v11;
+	double v81 = v80 * v34;
+	double v82 = v0 - v4;
+	double v83 = v82 * v27;
+	double v84 = v83 + v83;
+	double v85 = v84 * v26;
+	double v86 = v8 - v1;
+	double v87 = v86 * v13;
+	double v88 = v87 + v87;
+	double v89 = v82 * v17;
+	double v90 = v89 + v89;
+	double v91 = v88 + v90;
+	double v92 = v26 * v91;
+	double v93 = v92 * v43;
+	double v94 = -v93;
+	double v95 = v94 * v33;
+	double v96 = v85 + v95;
+	double v97 = v96 * v52;
+	double v98 = v81 + v97;
+	double v99 = v92 * v5;
+	double v100 = v98 + v99;
+	double v101 = v45 * v70;
+	double v102 = v64 + v101;
+	double v103 = v102 * v52;
+	double v104 = v78 + v103;
+	double v105 = v104 + v60;
+	double v106 = v59 * v71;
+	double v107 = v65 * v65;
+	double v108 = v107 + v107;
+	double v109 = v61 * v61;
+	double v110 = v109 + v109;
+	double v111 = v108 + v110;
+	double v112 = v111 * v26;
+	double v113 = v73 * v70;
+	double v114 = v112 + v113;
+	double v115 = v114 * v52;
+	double v116 = v106 + v115;
+	double v117 = v106 + v56;
+	double v118 = v116 + v117;
+	double v119 = v80 * v71;
+	double v120 = v86 * v65;
+	double v121 = v120 + v120;
+	double v122 = v121 * v26;
+	double v123 = v94 * v70;
+	double v124 = v122 + v123;
+	double v125 = v124 * v52;
+	double v126 = v119 + v125;
+	double v127 = v92 * v59;
+	double v128 = v126 + v127;
+	double v129 = v45 * v91;
+	double v130 = v85 + v129;
+	double v131 = v130 * v52;
+	double v132 = v99 + v131;
+	double v133 = v132 + v81;
+	double v134 = v73 * v91;
+	double v135 = v122 + v134;
+	double v136 = v135 * v52;
+	double v137 = v127 + v136;
+	double v138 = v137 + v119;
+	double v139 = v80 * v92;
+	double v140 = v86 * v86;
+	double v141 = v140 + v140;
+	double v142 = v82 * v82;
+	double v143 = v142 + v142;
+	double v144 = v141 + v143;
+	double v145 = v144 * v26;
+	double v146 = v94 * v91;
+	double v147 = v145 + v146;
+	double v148 = v147 * v52;
+	double v149 = v139 + v148;
+	double v150 = v139 + v56;
+	double v151 = v149 + v150;
+	hess(0, 0) = v58;
+	hess(0, 1) = v79;
+	hess(0, 2) = v100;
+	hess(1, 0) = v105;
+	hess(1, 1) = v118;
+	hess(1, 2) = v128;
+	hess(2, 0) = v133;
+	hess(2, 1) = v138;
+	hess(2, 2) = v151;
 }
 
 template<class S>
@@ -64,7 +260,9 @@ S compute(const Vector3<S> &a) {
 	Vector3<S> b;
 	b << 3, 4, 5;
 	Vector3<S> c = a+b;
-	return c.dot(c) / (c.norm());
+	Vector3<S> d = c.cross(a);
+	return c.dot(c) * d.norm();
+//	c.dot(c) / (c.norm());
 }
 
 //double computeByHand(const Vector3d &a) {
@@ -88,11 +286,28 @@ void computeGradientFD(const Vector3d &a, Vector3d &grad) {
 		double ep = compute(ap);
 		double em = compute(am);
 
-		grad[i] = (ep-em) / (2.*h);
+		grad(i) = (ep-em) / (2.*h);
 	}
 }
 
-void generateCode() {
+void computeHessianFD(const Vector3d &a, Matrix3d &hess, double h = 1e-5) {
+
+	for (int i = 0; i < 3; ++i) {
+		Vector3d ap = a;
+		ap(i) += h;
+		Vector3d am = a;
+		am(i) -= h;
+
+		Vector3d gradp; computeGradientCG(ap, gradp);
+		Vector3d gradm; computeGradientCG(am, gradm);
+
+		for (int j = 0; j < 3; ++j) {
+			hess(i,j) = (gradp(j)-gradm(j)) / (2.*h);
+		}
+	}
+}
+
+void generateCodeGradient() {
 
 	Vector3<ADRec> a;
 	a(0) = ADRec("a(0)");
@@ -123,6 +338,9 @@ void generateCodeHessian() {
 	a(0) = ADDRec("a(0)");
 	a(1) = ADDRec("a(1)");
 	a(2) = ADDRec("a(2)");
+//	a(0) = ADDRec(1);
+//	a(1) = ADDRec(2);
+//	a(2) = ADDRec(3);
 
 	CodeGenerator<double> generator;
 
@@ -134,7 +352,7 @@ void generateCodeHessian() {
 			a(j).value().deriv() = 1.0;
 			ADDRec f = compute(a);
 			hess(i,j) = f.deriv().deriv();
-			hess(i,j).addToGeneratorAsResult(generator, "hess(" + std::to_string(i) + ")");
+			hess(i,j).addToGeneratorAsResult(generator, "hess(" + std::to_string(i) + ", " + std::to_string(j) + ")");
 			a(j).value().deriv() = 0.0;
 		}
 		a(i).deriv().value() = 0.0;
@@ -146,27 +364,111 @@ void generateCodeHessian() {
 
 }
 
+void generateCodeGradientAndHessian() {
+
+	CodeGenerator<double> generator;
+
+	{
+		Vector3<ADRec> a;
+		a(0) = ADRec("a(0)");
+		a(1) = ADRec("a(1)");
+		a(2) = ADRec("a(2)");
+
+		Vector3<R> g;
+
+		for (int i = 0; i < 3; ++i) {
+			a(i).deriv() = 1.0;
+			ADRec n = compute(a);
+			g(i) = n.deriv();
+			g(i).addToGeneratorAsResult(generator, "g(" + std::to_string(i) + ")");
+			a(i).deriv() = 0.0;
+		}
+	}
+
+	{
+		Vector3<ADDRec> a;
+		a(0) = ADDRec("a(0)");
+		a(1) = ADDRec("a(1)");
+		a(2) = ADDRec("a(2)");
+
+		Matrix3<R> hess;
+
+		for (int i = 0; i < 3; ++i) {
+			a(i).deriv().value() = 1.0;
+			for (int j = 0; j < 3; ++j) {
+				a(j).value().deriv() = 1.0;
+				ADDRec f = compute(a);
+				hess(i,j) = f.deriv().deriv();
+				hess(i,j).addToGeneratorAsResult(generator, "hess(" + std::to_string(i) + ", " + std::to_string(j) + ")");
+				a(j).value().deriv() = 0.0;
+			}
+			a(i).deriv().value() = 0.0;
+		}
+	}
+
+	generator.sortNodes();
+
+	std::cout << generator.generateCode() << std::endl;
+
+}
+
 int main(int argc, char *argv[])
 {
 
-	generateCode();
-//	generateCodeHessian();
+	generateCodeGradient();
+	generateCodeHessian();
+	generateCodeGradientAndHessian();
 
+	std::cout << std::setprecision(10);
 
-
+	// get input
 	std::cout << "# args:" << argc <<std::endl;
-
 	Vector3d a;
 	a << atof(argv[1]), atof(argv[2]), atof(argv[3]);
-
 	std::cout << "a: " << a.transpose() << std::endl;
 
-	Vector3d grad;
-	computeGradientCG(a, grad);
-	Vector3d gradFD;
-	computeGradientCG(a, gradFD);
-	std::cout << "fd: " << grad.transpose() << std::endl;
-	std::cout << "cg: " << gradFD.transpose() << std::endl;
+	// check gradient
+	{
+		Vector3d grad; computeGradientCG(a, grad);
+		std::cout << "cg: " << grad.transpose() << std::endl;
+		Vector3d gradFD; computeGradientFD(a, gradFD);
+		std::cout << "fd: " << gradFD.transpose() << std::endl;
+
+		// check to true gradient
+		Vector3d gradTrue; gradTrue << -623.8033878, -35.92584956, 551.9516887;
+		double gradError = (gradTrue-grad).norm();
+		std::cout << "\nGradient Check: " << ((gradError < 1e-5) ? "OK!" : "NOT OK!") << std::endl << std::endl;
+	}
+
+	// check hessian
+	{
+		Matrix3d hess; computeHessianCG(a, hess);
+		std::cout << "cg: \n" << hess << std::endl;
+		Matrix3d hessFD; computeHessianFD(a, hessFD);
+		std::cout << "fd: \n" << hessFD << std::endl;
+
+		for (int i = 0; i < 10; ++i) {
+			double h = pow(10, -i);
+			Matrix3d hessFD; computeHessianFD(a, hessFD, h);
+			//		std::cout << "fd: \n" << hessFD << std::endl;
+
+			std::cout << "h = " << h << "\t";
+			std::cout << "error = " << (hess-hessFD).norm() << std::endl;
+		}
+
+		Matrix3d hessTrue;
+		hessTrue <<     115.670349, -469.7576996,  138.5322532 ,
+				-469.7576996,  779.4820693, -358.7141646 ,
+				138.5322532, -358.7141646,   337.757419;
+
+		std::cout << "true hess:\n" << hessTrue << std::endl;
+
+		std::cout << "true hess error CG: " << (hessTrue-hess).norm() << std::endl;
+		std::cout << "true hess error FD: " << (hessTrue-hessFD).norm() << std::endl;
+
+		double hessError = (hessTrue-hess).norm();
+		std::cout << "\nHessian Check: " << ((hessError < 1e-5) ? "OK!" : "NOT OK!") << std::endl << std::endl;
+	}
 
 
 	//	int n = 1e8;

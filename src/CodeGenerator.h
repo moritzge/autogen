@@ -54,7 +54,11 @@ public:
 		return (x << d) | (x >> (64-d));
 	}
 
-//protected:
+protected:
+	uint64_t computeHashRand() const {
+		return rand();
+	}
+
 	virtual uint64_t computeHash() const = 0;
 
 	void init() {
@@ -150,7 +154,7 @@ public:
 				}
 			}
 			else {
-				std::cout << "node already in!\n";
+//				std::cout << "node already in!\n";
 			}
 
 			// let's go to next node
@@ -342,7 +346,6 @@ public:
 		return mNode;
 	}
 
-
 	virtual S evaluate() const {
 		throw std::logic_error("cannot evaluate a variable name");
 		return 0;
@@ -362,7 +365,7 @@ public:
 
 	virtual uint64_t computeHash() const {
 		std::hash<std::string> hashS;
-		return hashS(mResVarName); // TODO: is this a good hash function?
+		return hashS(mResVarName) +  this->rol(this->mNode->getHash(), 3); // TODO: is this a good hash function?
 	}
 
 private:
@@ -388,26 +391,26 @@ public:
 		return mNode;
 	}
 
-
 	virtual S evaluate() const {
 		return -mNode->evaluate();
 	}
 
 	virtual bool evaluate(S &value) const {
-		if(mNode->evaluate(value))
+		S val;
+		if(mNode->evaluate(val))
 		{
-			value = -value;
+			value = -val;
 			return true;
 		}
 		return false;
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVarTypeName() + "= -" + generator.getVar(mNode.get()).getVarName();
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = -" + generator.getVar(mNode.get()).getVarName();
 	}
 
 	virtual uint64_t computeHash() const {
-		return this->rol(mNode->computeHash(), 3) + getHashId();
+		return this->rol(mNode->getHash(), 3) + getHashId();
 	}
 
 	virtual uint64_t getHashId() const { return 1; }
@@ -601,9 +604,10 @@ public:
 	}
 
 	virtual bool evaluate(S &value) const {
-		if(mNode->evaluate(value))
+		S val;
+		if(mNode->evaluate(val))
 		{
-			value = sqrt(value);
+			value = sqrt(val);
 			return true;
 		}
 		return false;
@@ -614,7 +618,7 @@ public:
 	}
 
 	virtual uint64_t computeHash() const {
-		return this->rol(mNode->computeHash(), 3) + getHashId();
+		return this->rol(mNode->getHash(), 13) + getHashId();
 	}
 
 	virtual uint64_t getHashId() const { return 7; }
@@ -648,20 +652,22 @@ public:
 	}
 
 	RecType<S> operator+(const RecType<S> &other) const {
+
 		Sp<const Node<S>> node(new NodeAdd<S>(mNode, other.mNode));
 
 		S value;
+
+		// constant expression?
+		if(node->evaluate(value)){
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(value)));
+		}
 		// 0+x = x
 		if(mNode->evaluate(value) && (value == 0 || value == -0)){
-			node = other.mNode;
+			return other;
 		}
 		// x+0 = x
-		else if(other.mNode->evaluate(value) && (value == 0 || value == -0)){
-			node = mNode;
-		}
-		// constant expression?
-		else if(node->evaluate(value)){
-			node.reset(new NodeConst<S>(value));
+		if(other.mNode->evaluate(value) && (value == 0)){
+			return RecType<S>(this->mNode);
 		}
 
 		return RecType<S>(node);
@@ -676,9 +682,9 @@ public:
 		Sp<const Node<S>> node(new NodeSub<S>(mNode, other.mNode));
 
 		S value;
-		// 0-x = x
+		// 0-x = -x
 		if(mNode->evaluate(value) && (value == 0 || value == -0)){
-			node = other.mNode;
+			node.reset(new NodeNeg<S>(other.mNode));
 		}
 		// x-0 = x
 		else if(other.mNode->evaluate(value) && (value == 0 || value == -0)){
@@ -766,11 +772,11 @@ public:
 		return mNode;
 	}
 
-	void printCode() const {
+	void printCode(std::string resVarName = "res") const {
 		CodeGenerator<S> generator;
-//		mNode->collectNodes(generator);
+		Node<S>* nodeRes = new NodeResult<S>(resVarName, mNode);
 
-		generator.collectNodes(mNode.get());
+		generator.collectNodes(nodeRes);
 		generator.sortNodes();
 
 		std::cout << generator.generateCode();
