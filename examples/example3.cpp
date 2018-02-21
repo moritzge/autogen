@@ -17,7 +17,7 @@ typedef AutoDiffT<ADRec, ADRec> ADDRec;
 template <class S> using Vector3 = Matrix<S, 3, 1>;
 template <class S> using Matrix3 = Matrix<S, 3, 3>;
 
-void computeGradientCG(const Vector3d &a, Vector3d &g) {
+void computeGradientCG(const Vector3d &a, Vector3d &grad) {
 	double v0 = a(1);
 	double v1 = a(2);
 	double v2 = a(0);
@@ -85,9 +85,9 @@ void computeGradientCG(const Vector3d &a, Vector3d &g) {
 	double v64 = v8 + v8;
 	double v65 = v64 * v24;
 	double v66 = v63 + v65;
-	g(0) = v42;
-	g(1) = v54;
-	g(2) = v66;
+	grad(0) = v42;
+	grad(1) = v54;
+	grad(2) = v66;
 
 }
 
@@ -255,6 +255,182 @@ void computeHessianCG(const Vector3d &a, Matrix3d &hess) {
 	hess(2, 2) = v151;
 }
 
+void computeGradientHessianCG(const Vector3d &a, Vector3d &grad, Matrix3d &hess){
+	double v0 = a(1);
+	double v1 = a(2);
+	double v2 = a(0);
+	double v3 = 0.500000;
+	double v4 = 4.000000;
+	double v5 = v0 + v4;
+	double v6 = v5 * v1;
+	double v7 = 5.000000;
+	double v8 = v1 + v7;
+	double v9 = v8 * v0;
+	double v10 = v6 - v9;
+	double v11 = v10 * v10;
+	double v12 = v8 * v2;
+	double v13 = 3.000000;
+	double v14 = v2 + v13;
+	double v15 = v14 * v1;
+	double v16 = v12 - v15;
+	double v17 = v16 * v16;
+	double v18 = v14 * v0;
+	double v19 = v5 * v2;
+	double v20 = v18 - v19;
+	double v21 = v20 * v20;
+	double v22 = v17 + v21;
+	double v23 = v11 + v22;
+	double v24 = sqrt(v23);
+	double v25 = v3 / v24;
+	double v26 = v8 - v1;
+	double v27 = v26 * v16;
+	double v28 = v27 + v27;
+	double v29 = v0 - v5;
+	double v30 = v29 * v20;
+	double v31 = v30 + v30;
+	double v32 = v28 + v31;
+	double v33 = v25 * v32;
+	double v34 = v14 * v14;
+	double v35 = v5 * v5;
+	double v36 = v8 * v8;
+	double v37 = v35 + v36;
+	double v38 = v34 + v37;
+	double v39 = v33 * v38;
+	double v40 = v14 + v14;
+	double v41 = v40 * v24;
+	double v42 = v39 + v41;
+	double v43 = v1 - v8;
+	double v44 = v43 * v10;
+	double v45 = v44 + v44;
+	double v46 = v14 - v2;
+	double v47 = v46 * v20;
+	double v48 = v47 + v47;
+	double v49 = v45 + v48;
+	double v50 = v25 * v49;
+	double v51 = v50 * v38;
+	double v52 = v5 + v5;
+	double v53 = v52 * v24;
+	double v54 = v51 + v53;
+	double v55 = v5 - v0;
+	double v56 = v55 * v10;
+	double v57 = v56 + v56;
+	double v58 = v2 - v14;
+	double v59 = v58 * v16;
+	double v60 = v59 + v59;
+	double v61 = v57 + v60;
+	double v62 = v25 * v61;
+	double v63 = v62 * v38;
+	double v64 = v8 + v8;
+	double v65 = v64 * v24;
+	double v66 = v63 + v65;
+	double v67 = v40 * v33;
+	double v68 = v26 * v26;
+	double v69 = v68 + v68;
+	double v70 = v29 * v29;
+	double v71 = v70 + v70;
+	double v72 = v69 + v71;
+	double v73 = v72 * v25;
+	double v74 = v24 * v24;
+	double v75 = v3 / v74;
+	double v76 = v33 * v75;
+	double v77 = -v76;
+	double v78 = v77 * v32;
+	double v79 = v73 + v78;
+	double v80 = v79 * v38;
+	double v81 = v67 + v80;
+	double v82 = 2.000000;
+	double v83 = v82 * v24;
+	double v84 = v67 + v83;
+	double v85 = v81 + v84;
+	double v86 = v52 * v33;
+	double v87 = v46 * v29;
+	double v88 = v87 + v87;
+	double v89 = v88 * v25;
+	double v90 = v50 * v75;
+	double v91 = -v90;
+	double v92 = v91 * v32;
+	double v93 = v89 + v92;
+	double v94 = v93 * v38;
+	double v95 = v86 + v94;
+	double v96 = v50 * v40;
+	double v97 = v95 + v96;
+	double v98 = v64 * v33;
+	double v99 = v58 * v26;
+	double v100 = v99 + v99;
+	double v101 = v100 * v25;
+	double v102 = v62 * v75;
+	double v103 = -v102;
+	double v104 = v103 * v32;
+	double v105 = v101 + v104;
+	double v106 = v105 * v38;
+	double v107 = v98 + v106;
+	double v108 = v62 * v40;
+	double v109 = v107 + v108;
+	double v110 = v77 * v49;
+	double v111 = v89 + v110;
+	double v112 = v111 * v38;
+	double v113 = v96 + v112;
+	double v114 = v113 + v86;
+	double v115 = v52 * v50;
+	double v116 = v43 * v43;
+	double v117 = v116 + v116;
+	double v118 = v46 * v46;
+	double v119 = v118 + v118;
+	double v120 = v117 + v119;
+	double v121 = v120 * v25;
+	double v122 = v91 * v49;
+	double v123 = v121 + v122;
+	double v124 = v123 * v38;
+	double v125 = v115 + v124;
+	double v126 = v115 + v83;
+	double v127 = v125 + v126;
+	double v128 = v64 * v50;
+	double v129 = v55 * v43;
+	double v130 = v129 + v129;
+	double v131 = v130 * v25;
+	double v132 = v103 * v49;
+	double v133 = v131 + v132;
+	double v134 = v133 * v38;
+	double v135 = v128 + v134;
+	double v136 = v62 * v52;
+	double v137 = v135 + v136;
+	double v138 = v77 * v61;
+	double v139 = v101 + v138;
+	double v140 = v139 * v38;
+	double v141 = v108 + v140;
+	double v142 = v141 + v98;
+	double v143 = v91 * v61;
+	double v144 = v131 + v143;
+	double v145 = v144 * v38;
+	double v146 = v136 + v145;
+	double v147 = v146 + v128;
+	double v148 = v64 * v62;
+	double v149 = v55 * v55;
+	double v150 = v149 + v149;
+	double v151 = v58 * v58;
+	double v152 = v151 + v151;
+	double v153 = v150 + v152;
+	double v154 = v153 * v25;
+	double v155 = v103 * v61;
+	double v156 = v154 + v155;
+	double v157 = v156 * v38;
+	double v158 = v148 + v157;
+	double v159 = v148 + v83;
+	double v160 = v158 + v159;
+	grad(0) = v42;
+	grad(1) = v54;
+	grad(2) = v66;
+	hess(0, 0) = v85;
+	hess(0, 1) = v97;
+	hess(0, 2) = v109;
+	hess(1, 0) = v114;
+	hess(1, 1) = v127;
+	hess(1, 2) = v137;
+	hess(2, 0) = v142;
+	hess(2, 1) = v147;
+	hess(2, 2) = v160;
+}
+
 template<class S>
 S compute(const Vector3<S> &a) {
 	Vector3<S> b;
@@ -264,14 +440,6 @@ S compute(const Vector3<S> &a) {
 	return c.dot(c) * d.norm();
 //	c.dot(c) / (c.norm());
 }
-
-//double computeByHand(const Vector3d &a) {
-////	Vector3d b;
-////	b << 3, 4, 5;
-
-//	return a.dot(a) + a.norm() + a.dot(b) + b.norm();
-//}
-
 
 void computeGradientFD(const Vector3d &a, Vector3d &grad) {
 
@@ -322,7 +490,7 @@ void generateCodeGradient() {
 		a(i).deriv() = 1.0;
 		ADRec n = compute(a);
 		g(i) = n.deriv();
-		g(i).addToGeneratorAsResult(generator, "g(" + std::to_string(i) + ")");
+		g(i).addToGeneratorAsResult(generator, "grad(" + std::to_string(i) + ")");
 		a(i).deriv() = 0.0;
 	}
 
@@ -374,13 +542,13 @@ void generateCodeGradientAndHessian() {
 		a(1) = ADRec("a(1)");
 		a(2) = ADRec("a(2)");
 
-		Vector3<R> g;
+		Vector3<R> grad;
 
 		for (int i = 0; i < 3; ++i) {
 			a(i).deriv() = 1.0;
 			ADRec n = compute(a);
-			g(i) = n.deriv();
-			g(i).addToGeneratorAsResult(generator, "g(" + std::to_string(i) + ")");
+			grad(i) = n.deriv();
+			grad(i).addToGeneratorAsResult(generator, "grad(" + std::to_string(i) + ")");
 			a(i).deriv() = 0.0;
 		}
 	}
@@ -427,23 +595,26 @@ int main(int argc, char *argv[])
 	a << atof(argv[1]), atof(argv[2]), atof(argv[3]);
 	std::cout << "a: " << a.transpose() << std::endl;
 
+	// compute gradient and hessian
+	Vector3d gradCG; Matrix3d hessCG;
+	computeGradientHessianCG(a, gradCG, hessCG);
+
+
 	// check gradient
 	{
-		Vector3d grad; computeGradientCG(a, grad);
-		std::cout << "cg: " << grad.transpose() << std::endl;
+		std::cout << "cg: " << gradCG.transpose() << std::endl;
 		Vector3d gradFD; computeGradientFD(a, gradFD);
 		std::cout << "fd: " << gradFD.transpose() << std::endl;
 
 		// check to true gradient
 		Vector3d gradTrue; gradTrue << -623.8033878, -35.92584956, 551.9516887;
-		double gradError = (gradTrue-grad).norm();
+		double gradError = (gradTrue-gradCG).norm();
 		std::cout << "\nGradient Check: " << ((gradError < 1e-5) ? "OK!" : "NOT OK!") << std::endl << std::endl;
 	}
 
 	// check hessian
 	{
-		Matrix3d hess; computeHessianCG(a, hess);
-		std::cout << "cg: \n" << hess << std::endl;
+		std::cout << "cg: \n" << hessCG << std::endl;
 		Matrix3d hessFD; computeHessianFD(a, hessFD);
 		std::cout << "fd: \n" << hessFD << std::endl;
 
@@ -453,7 +624,7 @@ int main(int argc, char *argv[])
 			//		std::cout << "fd: \n" << hessFD << std::endl;
 
 			std::cout << "h = " << h << "\t";
-			std::cout << "error = " << (hess-hessFD).norm() << std::endl;
+			std::cout << "error = " << (hessCG-hessFD).norm() << std::endl;
 		}
 
 		Matrix3d hessTrue;
@@ -463,10 +634,10 @@ int main(int argc, char *argv[])
 
 		std::cout << "true hess:\n" << hessTrue << std::endl;
 
-		std::cout << "true hess error CG: " << (hessTrue-hess).norm() << std::endl;
+		std::cout << "true hess error CG: " << (hessTrue-hessCG).norm() << std::endl;
 		std::cout << "true hess error FD: " << (hessTrue-hessFD).norm() << std::endl;
 
-		double hessError = (hessTrue-hess).norm();
+		double hessError = (hessTrue-hessCG).norm();
 		std::cout << "\nHessian Check: " << ((hessError < 1e-5) ? "OK!" : "NOT OK!") << std::endl << std::endl;
 	}
 

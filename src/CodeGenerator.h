@@ -682,21 +682,21 @@ public:
 		Sp<const Node<S>> node(new NodeSub<S>(mNode, other.mNode));
 
 		S value;
-		// 0-x = -x
-		if(mNode->evaluate(value) && (value == 0 || value == -0)){
-			node.reset(new NodeNeg<S>(other.mNode));
-		}
-		// x-0 = x
-		else if(other.mNode->evaluate(value) && (value == 0 || value == -0)){
-			node = mNode;
+		// constant expression?
+		if(node->evaluate(value)){
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(value)));
 		}
 		// x-x = 0
-		else if(mNode->getHash() == other.mNode->getHash()){
-			node.reset(new NodeConst<S>(0));
+		if(mNode->getHash() == other.mNode->getHash()){
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(0)));
 		}
-		// constant expression?
-		else if(node->evaluate(value)){
-			node.reset(new NodeConst<S>(value));
+		// 0-x = -x
+		if(mNode->evaluate(value) && (value == 0 || value == -0)){
+			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(other.mNode)));
+		}
+		// x-0 = x
+		if(other.mNode->evaluate(value) && (value == 0 || value == -0)){
+			return RecType<S>(mNode);
 		}
 
 		return RecType<S>(node);
@@ -711,28 +711,28 @@ public:
 		Sp<const Node<S>> node(new NodeMul<S>(mNode, other.mNode));
 
 		S value;
+		// evaluatable?
+		if(node->evaluate(value)) {
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(value)));
+		}
 		// 0*x or 0*x = 0
 		if((mNode->evaluate(value) && value == 0) || (other.mNode->evaluate(value) && value == 0)){
-			node.reset(new NodeConst<S>(0));
-		}
-		// evaluatable?
-		else if(node->evaluate(value)) {
-			node.reset(new NodeConst<S>(value));
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(0)));
 		}
 		// 1*x = x
-		else if(mNode->evaluate(value) && value == 1){
-			node = other.mNode;
+		if(mNode->evaluate(value) && value == 1){
+			return RecType<S>(other.mNode);
 		}
 		// x*1 = x
-		else if(other.mNode->evaluate(value) && value == 1){
-			node = mNode;
+		if(other.mNode->evaluate(value) && value == 1){
+			return RecType<S>(mNode);
 		}
 		// -1*x = -x
-		else if(mNode->evaluate(value) && value == -1)
-			node.reset(new NodeNeg<S>(other.mNode));
+		if(mNode->evaluate(value) && value == -1)
+			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(other.mNode)));
 		// x*-1 = -x
-		else if(other.mNode->evaluate(value) && value == -1)
-			node.reset(new NodeNeg<S>(mNode));
+		if(other.mNode->evaluate(value) && value == -1)
+			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(mNode)));
 
 		return RecType<S>(node);
 	}
@@ -746,20 +746,21 @@ public:
 		Sp<const Node<S>> node(new NodeDiv<S>(mNode, other.mNode));
 
 		S value;
+		// is constant expression?
+		if(node->evaluate(value)) {
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(value)));
+		}
+		// 0/x = 0
 		if(mNode->evaluate(value) && value == 0){
-			node.reset(new NodeConst<S>(0));
+			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(0)));
 		}
 		// TODO: what to do when divided by 0?
+		// x/1 = x
 		else if(other.mNode->evaluate(value) && value == 1){
-			node = mNode;
-		}
-		else if(node->evaluate(value)) {
-			node.reset(new NodeConst<S>(value));
+			return RecType<S>(mNode);
 		}
 
 		return RecType<S>(node);
-
-		return RecType<S>(Sp<const Node<S>>(new NodeDiv<S>(mNode, other.mNode)));
 	}
 
 	RecType<S> &operator/=(const RecType<S> &other) {
@@ -798,8 +799,18 @@ RecType<S> operator+(S value, const RecType<S> &other) {
 }
 
 template<class S>
+RecType<S> operator-(S value, const RecType<S> &other) {
+	return RecType<S>(value) - other;
+}
+
+template<class S>
 RecType<S> operator*(S value, const RecType<S> &other) {
 	return RecType<S>(value) * other;
+}
+
+template<class S>
+RecType<S> operator/(S value, const RecType<S> &other) {
+	return RecType<S>(value) / other;
 }
 
 template<class S>
