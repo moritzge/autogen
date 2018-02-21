@@ -109,7 +109,7 @@ public:
 		return it->second.second;
 	}
 
-	const Node<S>* getHashedNode(size_t nodeHash) const {
+	const Node<S>* getHashedNode(uint64_t nodeHash) const {
 		auto it = mHashedNodes.find(nodeHash);
 		if(it != mHashedNodes.end())
 			return it->second.first;
@@ -153,9 +153,12 @@ public:
 	}
 
 	void sortNodes(){
-		std::vector<size_t> nodesNew;
-		for (auto h : mNodes) {
+		std::vector<uint64_t> nodesNew;
+//		for (auto h : mNodes) {
+		for (int i = 0; i < mNodes.size(); ++i) {
+			uint64_t h = mNodes[i];
 			const Node<S>* node = mHashedNodes[h].first;
+			assert(node != nullptr);
 			addChildrenTo(node, nodesNew);
 		}
 
@@ -174,8 +177,7 @@ public:
 		std::string code;
 		for (int i = 0; i < mNodes.size(); ++i) {
 			code += mVarTypeName;
-			code += " " + mHashedNodes[mNodes[i]].second.getVarName();
-			code += " = " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
+			code += " " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
 //			code += std::to_string(mNodes[i]) + "\n";
 //			code += std::to_string(mHashedNodes[mNodes[i]].first) + "\n";
 		}
@@ -184,9 +186,10 @@ public:
 	}
 
 private:
-	void addChildrenTo(const Node<S>* node, std::vector<size_t> &nodesNew) const {
+	void addChildrenTo(const Node<S>* node, std::vector<uint64_t> &nodesNew) const {
 		// is this node already in the new list?
-		if(std::find(nodesNew.begin(), nodesNew.end(), node->getHash()) == nodesNew.end()) {
+		uint64_t h = node->getHash();
+		if(std::find(nodesNew.begin(), nodesNew.end(), h) == nodesNew.end()) {
 			// first make sure children are added
 			for (int i = 0; i < node->getNumChildren(); ++i) {
 				addChildrenTo(node->getChild(i).get(), nodesNew);
@@ -198,8 +201,8 @@ private:
 
 private:
 	std::string mVarTypeName = "double";
-	std::vector<size_t> mNodes;
-	std::map<size_t, std::pair<const Node<S>*, VarDef>> mHashedNodes;
+	std::vector<uint64_t> mNodes;
+	std::map<uint64_t, std::pair<const Node<S>*, VarDef>> mHashedNodes;
 };
 
 template<class S>
@@ -230,7 +233,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return std::to_string(mValue);
+		return generator.getVar(this).getVarName() + " = " + std::to_string(mValue);
 	}
 
 	virtual uint64_t computeHash() const {
@@ -271,7 +274,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return mVarName;
+		return generator.getVar(this).getVarName() + " = " + mVarName;
 	}
 
 	virtual uint64_t computeHash() const {
@@ -288,17 +291,18 @@ template<class S>
 class NodeResult : public Node<S>
 {
 public:
-	NodeResult (const std::string &varName)
-		: mVarName(varName) {
+	NodeResult (const std::string &varName, Sp<const Node<S>> node)
+		: mResVarName(varName), mNode(node) {
 		this->init();
 	}
 
 	virtual size_t getNumChildren() const {
-		return 0;
+		return 1;
 	}
 
 	virtual Sp<const Node<S>> getChild(size_t i) const {
-		throw std::logic_error("NodeVar does not have any children");
+		assert(i == 0);
+		return mNode;
 	}
 
 
@@ -312,17 +316,17 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return mVarName;
+		return mResVarName + " = " + generator.getVar(mNode.get()).getVarName();
 	}
 
 	virtual uint64_t computeHash() const {
 		std::hash<std::string> hashS;
-		return hashS(mVarName);
+		return hashS(mResVarName); // TODO: is this a good hash function?
 	}
 
 private:
-	std::string mVarName;
-
+	std::string mResVarName;
+	Sp<const Node<S>> mNode;
 };
 
 template<class S>
@@ -422,7 +426,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this->mNodeA.get()).getVarName() + " + " + generator.getVar(this->mNodeB.get()).getVarName();
+		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " + " + generator.getVar(this->mNodeB.get()).getVarName();
 	}
 
 	virtual uint64_t computeHash() const {
@@ -457,7 +461,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this->mNodeA.get()).getVarName() + " - " + generator.getVar(this->mNodeB.get()).getVarName();
+		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " - " + generator.getVar(this->mNodeB.get()).getVarName();
 	}
 
 	// order of subtraction matters, thus different rolling shift (3, 5)
@@ -492,7 +496,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this->mNodeA.get()).getVarName() + " * " + generator.getVar(this->mNodeB.get()).getVarName();
+		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " * " + generator.getVar(this->mNodeB.get()).getVarName();
 	}
 
 	virtual uint64_t computeHash() const {
@@ -526,7 +530,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVar(this->mNodeA.get()).getVarName() + " / " + generator.getVar(this->mNodeB.get()).getVarName();
+		return generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " / " + generator.getVar(this->mNodeB.get()).getVarName();
 	}
 
 	virtual uint64_t computeHash() const {
@@ -569,7 +573,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return "sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
+		return generator.getVar(this).getVarName() + " = sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
 	}
 
 	virtual uint64_t computeHash() const {
@@ -733,6 +737,12 @@ public:
 		generator.sortNodes();
 
 		std::cout << generator.generateCode();
+	}
+
+	void addToGeneratorAsResult(CodeGenerator<S> &generator, const std::string &resVarName) {
+		Node<S>* nodeRes = new NodeResult<S>(resVarName, mNode);
+
+		generator.collectNodes(nodeRes);
 	}
 
 private:

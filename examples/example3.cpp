@@ -12,7 +12,9 @@ using namespace Eigen;
 
 typedef RecType<double> R;
 typedef AutoDiffT<R, R> ADRec;
+typedef AutoDiffT<ADRec, ADRec> ADDRec;
 template <class S> using Vector3 = Matrix<S, 3, 1>;
+template <class S> using Matrix3 = Matrix<S, 3, 3>;
 
 double computeCG(const Vector3d &a) {
 
@@ -87,13 +89,41 @@ void generateCode() {
 
 	Vector3<R> g;
 
-
 	for (int i = 0; i < 3; ++i) {
 		a(i).deriv() = 1.0;
 		ADRec n = compute(a);
 		g(i) = n.deriv();
-		generator.collectNodes(g(i).getNode().get());
+		g(i).addToGeneratorAsResult(generator, "g(" + std::to_string(i) + ")");
 		a(i).deriv() = 0.0;
+	}
+
+	generator.sortNodes();
+
+	std::cout << generator.generateCode() << std::endl;
+
+}
+
+void generateCodeHessian() {
+
+	Vector3<ADDRec> a;
+	a(0) = ADDRec("a(0)");
+	a(1) = ADDRec("a(1)");
+	a(2) = ADDRec("a(2)");
+
+	CodeGenerator<double> generator;
+
+	Matrix3<R> hess;
+
+	for (int i = 0; i < 3; ++i) {
+		a(i).deriv().value() = 1.0;
+		for (int j = 0; j < 3; ++j) {
+			a(j).value().deriv() = 1.0;
+			ADDRec f = compute(a);
+			hess(i,j) = f.deriv().deriv();
+			hess(i,j).addToGeneratorAsResult(generator, "hess(" + std::to_string(i) + ")");
+			a(j).value().deriv() = 0.0;
+		}
+		a(i).deriv().value() = 0.0;
 	}
 
 	generator.sortNodes();
@@ -105,18 +135,18 @@ void generateCode() {
 int main(int argc, char *argv[])
 {
 
-	generateCode();
+	generateCodeHessian();
 
 
-	std::cout << "# args:" << argc <<std::endl;
+//	std::cout << "# args:" << argc <<std::endl;
 
-	Vector3d a;
-	a << atof(argv[1]), atof(argv[2]), atof(argv[3]);
+//	Vector3d a;
+//	a << atof(argv[1]), atof(argv[2]), atof(argv[3]);
 
-	std::cout << "a: " << a.transpose() << std::endl;
+//	std::cout << "a: " << a.transpose() << std::endl;
 
-	std::cout << "fd: " << computeFD(a) << std::endl;
-	std::cout << "cg: " << computeCG(a) << std::endl;
+//	std::cout << "fd: " << computeFD(a) << std::endl;
+//	std::cout << "cg: " << computeCG(a) << std::endl;
 //	int n = 1e8;
 
 //	auto t1 = Clock::now();
