@@ -16,6 +16,8 @@ template <class T> using Sp = std::shared_ptr<T>;
 template<class S>
 class CodeGenerator;
 
+enum NodeType { REGULAR_NODE, INPUT_NODE, OUTPUT_NODE };
+
 template<class S>
 class Node
 {
@@ -43,6 +45,10 @@ public:
 	}
 
 	virtual uint64_t getHashId() const { return 0; }
+
+	virtual NodeType getNodeType() const {
+		return REGULAR_NODE;
+	}
 
 	static uint64_t rol(uint64_t x, int d) {
 		return (x << d) | (x >> (64-d));
@@ -153,6 +159,8 @@ public:
 	}
 
 	void sortNodes(){
+
+		// topological sort
 		std::vector<uint64_t> nodesNew;
 //		for (auto h : mNodes) {
 		for (int i = 0; i < mNodes.size(); ++i) {
@@ -162,7 +170,33 @@ public:
 			addChildrenTo(node, nodesNew);
 		}
 
-		mNodes = nodesNew;
+		// move input/output nodes to front/back
+		std::vector<int> nodesIn, nodesOut;
+		for (int i = 0; i < nodesNew.size(); ++i) {
+			uint64_t h = nodesNew[i];
+			const Node<S>* node = mHashedNodes[h].first;
+			if(node->getNodeType() == INPUT_NODE) nodesIn.push_back(i);
+			else if(node->getNodeType() == OUTPUT_NODE) nodesOut.push_back(i);
+		}
+
+		std::vector<uint64_t> nodesNew2;
+		for (int i : nodesIn) {
+			nodesNew2.push_back(nodesNew[i]);
+		}
+
+		for (int i = 0; i < nodesNew.size(); ++i) {
+			if(std::find(nodesIn.begin(), nodesIn.end(), i) != nodesIn.end())
+				continue;
+			if(std::find(nodesOut.begin(), nodesOut.end(), i) != nodesOut.end())
+				continue;
+			nodesNew2.push_back(nodesNew[i]);
+		}
+
+		for (int i : nodesOut) {
+			nodesNew2.push_back(nodesNew[i]);
+		}
+
+		mNodes = nodesNew2;
 	}
 
 	std::string generateCode() {
@@ -178,8 +212,6 @@ public:
 		for (int i = 0; i < mNodes.size(); ++i) {
 			code += mVarTypeName;
 			code += " " + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
-//			code += std::to_string(mNodes[i]) + "\n";
-//			code += std::to_string(mHashedNodes[mNodes[i]].first) + "\n";
 		}
 
 		return code;
@@ -277,6 +309,10 @@ public:
 		return generator.getVar(this).getVarName() + " = " + mVarName;
 	}
 
+	virtual NodeType getNodeType() const {
+		return NodeType::INPUT_NODE;
+	}
+
 	virtual uint64_t computeHash() const {
 		std::hash<std::string> hashS;
 		return hashS(mVarName);
@@ -317,6 +353,10 @@ public:
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
 		return mResVarName + " = " + generator.getVar(mNode.get()).getVarName();
+	}
+
+	virtual NodeType getNodeType() const {
+		return NodeType::OUTPUT_NODE;
 	}
 
 	virtual uint64_t computeHash() const {

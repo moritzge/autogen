@@ -16,35 +16,47 @@ typedef AutoDiffT<ADRec, ADRec> ADDRec;
 template <class S> using Vector3 = Matrix<S, 3, 1>;
 template <class S> using Matrix3 = Matrix<S, 3, 3>;
 
-double computeCG(const Vector3d &a) {
+void computeGradientCG(const Vector3d &a, Vector3d &g) {
 
 	double v0 = a(0);
-	double v1 = 3.000000;
-	double v2 = v0 + v1;
-	double v3 = v2 + v2;
-	double v4 = v2 * v2;
-	double v5 = a(1);
-	double v6 = 4.000000;
-	double v7 = v5 + v6;
-	double v8 = v7 * v7;
-	double v9 = a(2);
+	double v1 = a(1);
+	double v2 = a(2);
+	double v3 = 3.000000;
+	double v4 = v0 + v3;
+	double v5 = v4 + v4;
+	double v6 = v4 * v4;
+	double v7 = 4.000000;
+	double v8 = v1 + v7;
+	double v9 = v8 * v8;
 	double v10 = 5.000000;
-	double v11 = v9 + v10;
+	double v11 = v2 + v10;
 	double v12 = v11 * v11;
-	double v13 = v8 + v12;
-	double v14 = v4 + v13;
+	double v13 = v9 + v12;
+	double v14 = v6 + v13;
 	double v15 = sqrt(v14);
 	double v16 = v15 * v15;
 	double v17 = v15 / v16;
-	double v18 = v3 * v17;
+	double v18 = v5 * v17;
 	double v19 = 0.500000;
 	double v20 = v19 / v15;
-	double v21 = v20 * v3;
+	double v21 = v20 * v5;
 	double v22 = v14 / v16;
 	double v23 = v21 * v22;
 	double v24 = v18 - v23;
+	g(0) = v24;
+	double v26 = v8 + v8;
+	double v27 = v26 * v17;
+	double v28 = v20 * v26;
+	double v29 = v28 * v22;
+	double v30 = v27 - v29;
+	g(1) = v30;
+	double v32 = v11 + v11;
+	double v33 = v32 * v17;
+	double v34 = v20 * v32;
+	double v35 = v34 * v22;
+	double v36 = v33 - v35;
+	g(2) = v36;
 
-	return v24;
 }
 
 template<class S>
@@ -63,19 +75,21 @@ S compute(const Vector3<S> &a) {
 //}
 
 
-double computeFD(const Vector3d &a) {
+void computeGradientFD(const Vector3d &a, Vector3d &grad) {
 
 	double h = 1e-5;
 
-	Vector3d ap = a;
-	ap(0) += h;
-	Vector3d am = a;
-	am(0) -= h;
+	for (int i = 0; i < 3; ++i) {
+		Vector3d ap = a;
+		ap(i) += h;
+		Vector3d am = a;
+		am(i) -= h;
 
-	double ep = compute(ap);
-	double em = compute(am);
+		double ep = compute(ap);
+		double em = compute(am);
 
-	return (ep-em) / (2.*h);
+		grad[i] = (ep-em) / (2.*h);
+	}
 }
 
 void generateCode() {
@@ -135,31 +149,39 @@ void generateCodeHessian() {
 int main(int argc, char *argv[])
 {
 
-	generateCodeHessian();
+	generateCode();
+//	generateCodeHessian();
 
 
-//	std::cout << "# args:" << argc <<std::endl;
 
-//	Vector3d a;
-//	a << atof(argv[1]), atof(argv[2]), atof(argv[3]);
+	std::cout << "# args:" << argc <<std::endl;
 
-//	std::cout << "a: " << a.transpose() << std::endl;
+	Vector3d a;
+	a << atof(argv[1]), atof(argv[2]), atof(argv[3]);
 
-//	std::cout << "fd: " << computeFD(a) << std::endl;
-//	std::cout << "cg: " << computeCG(a) << std::endl;
-//	int n = 1e8;
+	std::cout << "a: " << a.transpose() << std::endl;
+
+	Vector3d grad;
+	computeGradientCG(a, grad);
+	Vector3d gradFD;
+	computeGradientCG(a, gradFD);
+	std::cout << "fd: " << grad.transpose() << std::endl;
+	std::cout << "cg: " << gradFD.transpose() << std::endl;
+
+
+	//	int n = 1e8;
 
 //	auto t1 = Clock::now();
 //	double sum = 0;
 //	for (int i = 0; i < n; ++i) {
-//		sum += computeCG(a);
+//		computeGradientCG(a, grad);
 //	}
 //	std::cout << "sum = " << sum << std::endl;
 
 //	auto t2 = Clock::now();
 //	sum = 0;
 //	for (int i = 0; i < n; ++i) {
-//		sum += computeByHand(a);
+//		computeGradientFD(a, gradFD);
 //	}
 //	std::cout << "sum = " << sum << std::endl;
 
