@@ -1,5 +1,7 @@
 # Autogen
 
+[![pipeline status](https://gitlab.inf.ethz.ch/moritzge/autogen/badges/master/pipeline.svg)](https://gitlab.inf.ethz.ch/moritzge/autogen/commits/master)
+
 ## Build
 
 ```
@@ -20,3 +22,10 @@ There is a presentation explaining the basics of AutoDiff and CodeGen:
 
 And a repo with the examples: [repo](https://gitlab.inf.ethz.ch/moritzge/autogen-presentation)
 
+## Todo
+
+- [ ] instead of writing code, evaluating expression graph
+- [ ] make benchmarks
+- [ ] check out template meta programming
+- [ ] more symbolic simplification including different node types
+- [ ] autodiff/autogen objective in scp
