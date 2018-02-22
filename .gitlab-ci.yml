@@ -3,6 +3,13 @@ before_script:
  - apt-get install -y -qq g++
  - apt-get install -y -qq libeigen3-dev
  - apt-get install -y -qq cmake
+ - apt-get install -y -qq libgtest-dev
+ - pushd /usr/src/gtest
+ - cmake CMakeLists.txt
+ - make
+ - cp *.a /usr/local/lib
+ - popd
+
  
 build-autogen:
  script:
