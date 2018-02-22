@@ -11,7 +11,7 @@ if (AUTOGEN_EIGEN_NO_DEBUG)
 endif()
 
 # dependencies project-wide
-find_package(Eigen3 3.3.4 REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # find_package(OpenMP)
 # if (OPENMP_FOUND)
