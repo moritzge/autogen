@@ -1,8 +1,12 @@
 before_script:
- - apt-get install libeigen3-dev
-
+ - apt-get update -qq
+ - apt-get install -y -qq g++
+ - apt-get install -y -qq libeigen3-dev
+ - apt-get install -y -qq cmake
+ 
 build-autogen:
  script:
-  - mkdir build && cd mkdir
-    - cmake ..
-    - make
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
