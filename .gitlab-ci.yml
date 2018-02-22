@@ -1,0 +1,12 @@
+before_script:
+ - sudo apt-get install libeigen3-dev
+
+build-autogen:
+ script:
+  - mkdir build && cd mkdir
+    - cmake ..
+    - make
+
+rubocop:
+ script:
+  - bundle exec rubocop
