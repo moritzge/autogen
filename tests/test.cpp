@@ -13,7 +13,7 @@
 
 ////////////////////////////////////////////////////////////////////////// helper functions for building and loading library
 
-// function for code generator that is loaded during runtime
+// general function for code generator that is loaded during runtime
 //                            in     out
 typedef void compute_extern(double*,double*);
 
@@ -140,6 +140,93 @@ TEST(GenerateCodeAndLoadLib, DotProduct) {
 		double y[1];
 		compute(x.data(), y);
 		EXPECT_EQ(y[0], computeDotProduct(x));
+	}
+}
+
+////////////////////////////////////////////////////////////////////////// TEST 3
+
+template <class S> using Vector3 = Eigen::Matrix<S, 3, 1>;
+
+template<class T>
+T computeDotAndCrossNorm(const Vector3<T> &a, const Vector3<T> &b) {
+	return a.dot(b) + a.cross(b).norm();
+}
+
+void computeGradientFD(const Vector3<double> &a, const Vector3<double> &b, Vector3<double> &grad) {
+
+	double h = 1e-5;
+
+	for (int i = 0; i < 3; ++i) {
+		Vector3<double> ap = a;
+		ap(i) += h;
+		Vector3<double> am = a;
+		am(i) -= h;
+
+		double ep = computeDotAndCrossNorm(ap, b);
+		double em = computeDotAndCrossNorm(am, b);
+
+		grad(i) = (ep-em) / (2.*h);
+	}
+}
+
+TEST(GenerateCodeAndLoadLib, Gradient) {
+	using namespace CodeGen;
+	typedef RecType<double> R;
+	typedef AutoDiff<R, R> AD;
+
+	// record computation
+	Vector3<AD> a, b;
+	for (int i = 0; i < 3; ++i) {
+		a[i] = R("x[" + std::to_string(i) + "]");
+		b[i] = R("x[" + std::to_string(3+i) + "]");
+	}
+
+	Vector3<R> grad;
+	for (int i = 0; i < 3; ++i) {
+		a(i).deriv() = 1.0;
+		AD y = computeDotAndCrossNorm(a, b);
+		grad(i) = y.deriv();
+		a(i).deriv() = 0.0;
+	}
+
+	CodeGenerator<double> generator;
+	for (int i = 0; i < 3; ++i) {
+		grad(i).addToGeneratorAsResult(generator, "y[" + std::to_string(i) + "]");
+	}
+	generator.sortNodes();
+	std::string code = generator.generateCode();
+
+	// and wrap it in a function
+	std::string libCode = "#include <cmath>\nextern \"C\" void compute_extern(double* x, double* y) {\n;\n";
+	libCode += code;
+	libCode += "}\n";
+
+	// make and load library
+	std::string libName = "compute_gradient";
+	buildLibrary(libCode, libName);
+	compute_extern* compute_CG = loadLibrary(libName);
+
+	// test it!
+	{
+		Vector3<double> a;
+		a << 1.2, 3.4, 5.5;
+		Vector3<double> b;
+		b << 4.2, -0.1, 1.8;
+		double x[6];
+		for (int i = 0; i < 3; ++i) {
+			x[i] = a(i);
+			x[3+i] = b(i);
+		}
+
+		// compute with CG
+		Vector3<double> grad_CG;
+		compute_CG(x, grad_CG.data());
+
+		// compute with FD
+		Vector3<double> grad_FD;
+		computeGradientFD(a, b, grad_FD);
+
+		EXPECT_NEAR(grad_CG.norm(), grad_FD.norm(), 1e-5);
 	}
 }
 
