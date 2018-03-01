@@ -438,24 +438,32 @@ public:
 		throw std::logic_error("NodeBinaryOperation has only two children");
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(mNodeB.get()).getVarName();
-	}
-
-	virtual std::string getOpName() const = 0;
-
 protected:
 	Sp<const Node<S>> mNodeA;
 	Sp<const Node<S>> mNodeB;
 };
 
 template<class S>
-class NodeAdd : public NodeBinaryOperation<S>
+class NodeBinaryOperationBasic : public NodeBinaryOperation<S>
+{
+public:
+	NodeBinaryOperationBasic (Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
+		: NodeBinaryOperation<S>(nodeA, nodeB) {}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(this->mNodeB.get()).getVarName();
+	}
+
+	virtual std::string getOpName() const = 0;
+};
+
+template<class S>
+class NodeAdd : public NodeBinaryOperationBasic<S>
 {
 public:
 
 	NodeAdd(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		: NodeBinaryOperationBasic<S>(nodeA, nodeB) {
 		this->init();
 	}
 
@@ -483,7 +491,7 @@ public:
 };
 
 template<class S>
-class NodeSub : public NodeBinaryOperation<S>
+class NodeSub : public NodeBinaryOperationBasic<S>
 {
 public:
 
@@ -517,11 +525,11 @@ public:
 };
 
 template<class S>
-class NodeMul : public NodeBinaryOperation<S>
+class NodeMul : public NodeBinaryOperationBasic<S>
 {
 public:
 	NodeMul(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		: NodeBinaryOperationBasic<S>(nodeA, nodeB) {
 		this->init();
 	}
 
@@ -549,11 +557,11 @@ public:
 };
 
 template<class S>
-class NodeDiv : public NodeBinaryOperation<S>
+class NodeDiv : public NodeBinaryOperationBasic<S>
 {
 public:
 	NodeDiv(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		: NodeBinaryOperationBasic<S>(nodeA, nodeB) {
 		this->init();
 	}
 
@@ -572,6 +580,42 @@ public:
 	}
 
 	virtual std::string getOpName() const { return "/"; }
+
+	virtual uint64_t computeHash() const {
+		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 5) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const { return 5; }
+};
+
+template<class S>
+class NodePow : public NodeBinaryOperation<S>
+{
+public:
+	NodePow(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
+		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		this->init();
+	}
+
+	virtual S evaluate() const {
+		return pow(this->mNodeA->evaluate(), this->mNodeB->evaluate());
+	}
+
+	virtual bool evaluate(S &value) const {
+		S valA, valB;
+		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
+		{
+			value = pow(valA, valB);
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName()
+				+ " = pow(" + generator.getVar(this->mNodeA.get()).getVarName()
+				+ ", " + generator.getVar(this->mNodeB.get()).getVarName() + ")";
+	}
 
 	virtual uint64_t computeHash() const {
 		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 5) + getHashId();
@@ -773,14 +817,19 @@ public:
 		return mNode;
 	}
 
-	void printCode(std::string resVarName = "res") const {
+	std::string generateCode(std::string resVarName = "res") const {
 		CodeGenerator<S> generator;
 		Node<S>* nodeRes = new NodeResult<S>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
 		generator.sortNodes();
 
-		std::cout << generator.generateCode();
+		return generator.generateCode();
+	}
+
+	void printCode(std::string resVarName = "res") const {
+
+		std::cout << generateCode(resVarName);
 	}
 
 	void addToGeneratorAsResult(CodeGenerator<S> &generator, const std::string &resVarName) {
@@ -816,6 +865,17 @@ RecType<S> operator/(S value, const RecType<S> &other) {
 template<class S>
 RecType<S> sqrt(const RecType<S> &other) {
 	return RecType<S>(Sp<const Node<S>>(new NodeSqrt<S>(other.getNode())));
+}
+
+template<class S>
+RecType<S> pow(const RecType<S> &a, const RecType<S> &b) {
+	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), b.getNode())));
+}
+
+template<class S>
+RecType<S> pow(const RecType<S> &a, S b) {
+	Sp<const Node<S>> nodeB(new NodeConst<S>(b));
+	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), nodeB)));
 }
 
 }
