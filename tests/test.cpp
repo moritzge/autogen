@@ -8,8 +8,8 @@
 #include "execCmd.h"
 #include <dlfcn.h>
 
-// the types of the class factories
-typedef double compute_y(double);
+//                            in     out
+typedef void compute_extern(double*,double*);
 
 void makeLibrary(std::string code, std::string libName) {
 	std::ofstream out(libName + ".cpp");
@@ -19,7 +19,7 @@ void makeLibrary(std::string code, std::string libName) {
 	std::string res = exec("g++ -fPIC -shared -o"+libName+".so "+libName+".cpp");
 }
 
-compute_y* loadLibrary(std::string libName) {
+compute_extern* loadLibrary(std::string libName) {
 	// load the library
 	void* libCompute = dlopen(("./"+ libName + ".so").c_str(), RTLD_LAZY);
 	if (!libCompute) {
@@ -30,7 +30,7 @@ compute_y* loadLibrary(std::string libName) {
 	dlerror();
 
 	// load the symbols
-	compute_y* comp_y = (compute_y*) dlsym(libCompute, "compute_y");
+	compute_extern* comp_y = (compute_extern*) dlsym(libCompute, "compute_extern");
 	const char* dlsym_error = dlerror();
 	if (dlsym_error) {
 		std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
@@ -50,25 +50,28 @@ TEST(CodeGenTest, GenerateCodeAndLoadLib) {
 	using namespace CodeGen;
 
 	// record computation
-	RecType<double> y = computeSomething(RecType<double>("a"));
+	RecType<double> y = computeSomething(RecType<double>("x[0]"));
 
 	// generate the code
-	std::string code = y.generateCode("y");
+	std::string code = y.generateCode("y[0]");
 
 	// and wrap it in a function
-	std::string libCode = "#include <cmath>\nextern \"C\" double compute_y(double a) {\ndouble y;\n";
+	std::string libCode = "#include <cmath>\nextern \"C\" void compute_extern(double* x, double* y) {\n;\n";
 	libCode += code;
-	libCode += "return y+1;\n}\n";
+	libCode += "}\n";
 
 	// make and load library
 	std::string libName = "compute_y";
 	makeLibrary(libCode, libName);
-	compute_y* comp_y = loadLibrary(libName);
+	compute_extern* comp_y = loadLibrary(libName);
 
 	// test it!
-	double x = 0.123;
-	double res = comp_y(x);
-	EXPECT_EQ(res, computeSomething(x));
+	{
+		double x[1]; x[0] = 0.124;
+		double y[1];
+		comp_y(x, y);
+		EXPECT_EQ(y[0], computeSomething(x[0]));
+	}
 }
 
 
