@@ -5,23 +5,46 @@
 #include <AutoDiff.h>
 #include <CodeGenerator.h>
 
+#include <Eigen/Eigen>
+
 #include "execCmd.h"
 #include <dlfcn.h>
 
+
+////////////////////////////////////////////////////////////////////////// helper functions for building and loading library
+
+// function for code generator that is loaded during runtime
 //                            in     out
 typedef void compute_extern(double*,double*);
 
-void makeLibrary(std::string code, std::string libName) {
-	std::ofstream out(libName + ".cpp");
-	out << code;
-	out.close();
+void buildLibrary(std::string code, std::string libName) {
 
-	std::string res = exec("g++ -fPIC -shared -o"+libName+".so "+libName+".cpp");
+	// make dir
+	exec("mkdir -p " + libName);
+
+	// create cpp file
+	std::ofstream cppFile(libName+"/"+libName+".cpp");
+	cppFile << code;
+	cppFile.close();
+
+	// create CMakeLists.txt
+	std::ofstream cmakeFile(libName+"/CMakeLists.txt");
+	cmakeFile <<
+				 "cmake_minimum_required(VERSION 3.5 FATAL_ERROR)\n"
+				 "project(" << libName << ")\n"
+				 "file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.cpp)\n"
+				 "add_library(${PROJECT_NAME} SHARED ${sources})";
+	cmakeFile.close();
+
+//	std::string res = exec("g++ -fPIC -shared -o"+libName+"/"+libName+".so "+libName+"/"+libName+".cpp");
+	exec("cmake "+libName+"/CMakeLists.txt");
+	exec("cmake --build "+libName);
+
 }
 
 compute_extern* loadLibrary(std::string libName) {
 	// load the library
-	void* libCompute = dlopen(("./"+ libName + ".so").c_str(), RTLD_LAZY);
+	void* libCompute = dlopen((libName+"/lib"+ libName + ".so").c_str(), RTLD_LAZY);
 	if (!libCompute) {
 		std::cerr << "Cannot load library: " << dlerror() << '\n';
 	}
@@ -39,18 +62,21 @@ compute_extern* loadLibrary(std::string libName) {
 	return comp_y;
 }
 
+
+////////////////////////////////////////////////////////////////////////// TEST 1
+
 template<class T>
-T computeSomething(T a) {
+T computeScalar(T a) {
 	T b = 3;
 	T c = 4;
-	return pow(a,2.0)*b + c;
+	return pow(a,5.0)*b + c*sqrt(a);
 }
 
-TEST(CodeGenTest, GenerateCodeAndLoadLib) {
+TEST(GenerateCodeAndLoadLib, ScalarCompute) {
 	using namespace CodeGen;
 
 	// record computation
-	RecType<double> y = computeSomething(RecType<double>("x[0]"));
+	RecType<double> y = computeScalar(RecType<double>("x[0]"));
 
 	// generate the code
 	std::string code = y.generateCode("y[0]");
@@ -62,7 +88,7 @@ TEST(CodeGenTest, GenerateCodeAndLoadLib) {
 
 	// make and load library
 	std::string libName = "compute_y";
-	makeLibrary(libCode, libName);
+	buildLibrary(libCode, libName);
 	compute_extern* comp_y = loadLibrary(libName);
 
 	// test it!
@@ -70,7 +96,50 @@ TEST(CodeGenTest, GenerateCodeAndLoadLib) {
 		double x[1]; x[0] = 0.124;
 		double y[1];
 		comp_y(x, y);
-		EXPECT_EQ(y[0], computeSomething(x[0]));
+		EXPECT_EQ(y[0], computeScalar(x[0]));
+	}
+}
+
+////////////////////////////////////////////////////////////////////////// TEST 2
+
+template <class S> using Vector3 = Eigen::Matrix<S, 3, 1>;
+
+template<class T>
+T computeDotProduct(Vector3<T> &a) {
+	return a.dot(a);
+}
+
+TEST(GenerateCodeAndLoadLib, DotProduct) {
+	using namespace CodeGen;
+	typedef RecType<double> R;
+
+	// record computation
+	Vector3<R> x;
+	for (int i = 0; i < 3; ++i) {
+		x[i] = R("x[" + std::to_string(i) + "]");
+	}
+	R y = computeDotProduct(x);
+
+	// generate the code
+	std::string code = y.generateCode("y[0]");
+
+	// and wrap it in a function
+	std::string libCode = "#include <cmath>\nextern \"C\" void compute_extern(double* x, double* y) {\n;\n";
+	libCode += code;
+	libCode += "}\n";
+
+	// make and load library
+	std::string libName = "compute_somethingElse";
+	buildLibrary(libCode, libName);
+	compute_extern* compute = loadLibrary(libName);
+
+	// test it!
+	{
+		Eigen::Vector3d x;
+		x << 0.1243, 1.34, 5.67;
+		double y[1];
+		compute(x.data(), y);
+		EXPECT_EQ(y[0], computeDotProduct(x));
 	}
 }
 
