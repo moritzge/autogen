@@ -5,228 +5,173 @@
 #include <cmath>
 #include <cassert>
 
-template <class ValueT, class DerivT>
-class AutoDiffT
+template <class Value, class Deriv>
+class AutoDiff
 {
 public:
-	AutoDiffT() {
+	AutoDiff() {
 	}
 
 	template<class T>
-	AutoDiffT(const T &c)
-		: m_x((ValueT)c), m_d((DerivT)0) {
+	AutoDiff(const T &c) : m_x((Value)c), m_d((Deriv)0) {}
+
+	AutoDiff(const Value &x, const Deriv &d)	: m_x(x), m_d(d) {
 	}
 
-	AutoDiffT(const ValueT &x, const DerivT &d)
-		: m_x(x), m_d(d) {
+	bool operator==(const AutoDiff<Value, Deriv> &other) const {
+		return other.value() == this->value();
 	}
 
-	bool operator==(const AutoDiffT<ValueT, DerivT> &s) const {
-		return s.value() == this->value();
+	bool operator!=(const AutoDiff<Value, Deriv> &other) const {
+		return other.value() != this->value();
 	}
 
-	bool operator!=(const AutoDiffT<ValueT, DerivT> &s) const {
-		return s.value() != this->value();
+	AutoDiff<Value, Deriv> operator+(const AutoDiff<Value, Deriv> &other) const {
+		return AutoDiff<Value, Deriv>(m_x + other.m_x, m_d + other.m_d);
 	}
 
-	AutoDiffT<ValueT, DerivT> operator+(const AutoDiffT<ValueT, DerivT> &s) const {
-		return AutoDiffT<ValueT, DerivT>(m_x + s.m_x, m_d + s.m_d);
+	AutoDiff<Value, Deriv> operator-(const AutoDiff<Value, Deriv> &other) const {
+		return AutoDiff<Value, Deriv>(m_x - other.m_x, m_d - other.m_d);
 	}
 
-	AutoDiffT<ValueT, DerivT> operator-(const AutoDiffT<ValueT, DerivT> &s) const {
-		return AutoDiffT<ValueT, DerivT>(m_x - s.m_x, m_d - s.m_d);
+	AutoDiff<Value, Deriv> operator-() const {
+		return AutoDiff<Value, Deriv>(-m_x, -m_d);
 	}
 
-	AutoDiffT<ValueT, DerivT> operator-() const {
-		return AutoDiffT<ValueT, DerivT>(-m_x, -m_d);
-	}
-
-	AutoDiffT<ValueT, DerivT> &operator+=(const AutoDiffT<ValueT, DerivT> &s) {
-		m_x = m_x + s.m_x;
-		m_d = m_d + s.m_d;
-
-		return *this;
-	}
-
-	AutoDiffT<ValueT, DerivT> &operator-=(const AutoDiffT<ValueT, DerivT> &s) {
-		m_x = m_x - s.m_x;
-		m_d = m_d - s.m_d;
-
-		return *this;
-	}
-
-	AutoDiffT<ValueT, DerivT> operator*(const AutoDiffT<ValueT, DerivT> &s) const {
+	AutoDiff<Value, Deriv> operator*(const AutoDiff<Value, Deriv> &other) const {
 		// D(x*y) = x*dy + dx*y
-		return AutoDiffT<ValueT, DerivT>(m_x * s.m_x,
-			s.m_d * m_x + m_d * s.m_x);
+		return AutoDiff<Value, Deriv>(m_x * other.m_x, other.m_d * m_x + m_d * other.m_x);
 	}
 
-	AutoDiffT<ValueT, DerivT> operator/(const AutoDiffT<ValueT, DerivT> &s) const {
+	AutoDiff<Value, Deriv> operator/(const AutoDiff<Value, Deriv> &other) const {
 		// D(x/y) = (dx*y - x*dy) / y*y
-		ValueT denom = s.m_x * s.m_x;
-		return AutoDiffT<ValueT, DerivT>(m_x / s.m_x,
-			m_d*(s.m_x/denom) - s.m_d*(m_x/denom));
+		Value x2 = other.m_x * other.m_x;
+		return AutoDiff<Value, Deriv>(m_x / other.m_x, m_d*(other.m_x/x2) - other.m_d*(m_x/x2));
 	}
 
-	AutoDiffT<ValueT, DerivT> &operator*=(const AutoDiffT<ValueT, DerivT> &s) {
-		*this = (*this) * s;
+	AutoDiff<Value, Deriv> &operator+=(const AutoDiff<Value, Deriv> &other) {
+		m_x = m_x + other.m_x;
+		m_d = m_d + other.m_d;
 		return *this;
 	}
 
-	AutoDiffT<ValueT, DerivT> &operator/=(const AutoDiffT<ValueT, DerivT> &s) {
-		*this = (*this) / s;
+	AutoDiff<Value, Deriv> &operator-=(const AutoDiff<Value, Deriv> &other) {
+		m_x = m_x - other.m_x;
+		m_d = m_d - other.m_d;
+
 		return *this;
 	}
 
-	bool operator>(const AutoDiffT<ValueT, DerivT> &d) const {
-		return m_x > d.m_x;
+	AutoDiff<Value, Deriv> &operator*=(const AutoDiff<Value, Deriv> &other) {
+		*this = *this * other;
+		return *this;
 	}
 
-	bool operator<(const AutoDiffT<ValueT, DerivT> &d) const {
-		return m_x < d.m_x;
+	AutoDiff<Value, Deriv> &operator/=(const AutoDiff<Value, Deriv> &other) {
+		*this = *this / other;
+		return *this;
 	}
 
-	bool operator>=(const AutoDiffT<ValueT, DerivT> &d) const {
-		return m_x >= d.m_x;
-	}
+	const Value &value() const { return m_x; }
+	Value &value() { return m_x; }
 
-	bool operator<=(const AutoDiffT<ValueT, DerivT> &d) const {
-		return m_x <= d.m_x;
-	}
-
-	const ValueT &value() const { return m_x; }
-
-	ValueT &value() { return m_x; }
-
-	const DerivT &deriv() const { return m_d; }
-
-	DerivT &deriv() { return m_d; }
+	const Deriv &deriv() const { return m_d; }
+	Deriv &deriv() { return m_d; }
 
 private:
-	ValueT m_x;			//!< The variable value
-	DerivT m_d;			//!< Value of derivative(s)
+	Value m_x;			// value
+	Deriv m_d;			// derivative
 };
 
-
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> operator+(const ValueT &a, const AutoDiffT<ValueT, DerivT> &b)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> operator+(const Value &a, const AutoDiff<Value, Deriv> &y)
 {
-	return AutoDiffT<ValueT, DerivT>(a + b.value(), b.deriv());
+	// d(a+y) = dy/dx
+	return AutoDiff<Value, Deriv>(a + y.value(), y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> operator-(const ValueT &a, const AutoDiffT<ValueT, DerivT> &b)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> operator-(const Value &a, const AutoDiff<Value, Deriv> &y)
 {
-	return AutoDiffT<ValueT, DerivT>(a - b.value(), -b.deriv());
+	// d(a-y) = -dy/dx
+	return AutoDiff<Value, Deriv>(a - y.value(), -y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> operator*(const ValueT &a, const AutoDiffT<ValueT, DerivT> &b)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> operator*(const Value &a, const AutoDiff<Value, Deriv> &y)
 {
-	return AutoDiffT<ValueT, DerivT>(a * b.value(), b.deriv() * a);
+	// d(a*y)/dx = a*dy/dx
+	return AutoDiff<Value, Deriv>(a * y.value(), a * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> operator/(const ValueT &nom, const AutoDiffT<ValueT, DerivT> &denom)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> operator/(const Value &a, const AutoDiff<Value, Deriv> &y)
 {
-	// D(a/x) = -a/x^2 * dx
-	return AutoDiffT<ValueT, DerivT>(nom / denom.value(),
-		denom.deriv() * (-(nom / (denom.value() * denom.value()))));
+	// D(a/y) = -a/y^2 * dy/dx
+	return AutoDiff<Value, Deriv>(a / y.value(), -a / (y.value() * y.value()) * y.deriv());
 }
 
-
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> sin(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> sin(const AutoDiff<Value, Deriv> &y)
 {
-	// D(sin(x)) = cos(x) * dx
-	return AutoDiffT<ValueT, DerivT>(sin(s.value()),
-		s.deriv() * cos(s.value()));
+	// d(sin(y))/dx = cos(y) * dy/dx
+	return AutoDiff<Value, Deriv>(sin(y.value()), cos(y.value()) * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> cos(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> cos(const AutoDiff<Value, Deriv> &y)
 {
-	// D(cos(x)) = -sin(x) * dx
-	return AutoDiffT<ValueT, DerivT>(cos(s.value()),
-		s.deriv() * (-sin(s.value())));
+	// d(cos(y))/dx = -sin(y) * dy/dx
+	return AutoDiff<Value, Deriv>(cos(y.value()), -sin(y.value()) * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> tan(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> tan(const AutoDiff<Value, Deriv> &y)
 {
-	ValueT tanVal = tan(s.value());
+	Value tanValue = tan(y.value());
 
-	// D(tan(x)) = (1 + tan(x)^2) * dx
-	return AutoDiffT<ValueT, DerivT>(tanVal,
-		s.deriv() * ((ValueT)1 + tanVal*tanVal));
+	// d(tan(y))/dx = (1 + tan(y)^2) * dy/dx
+	return AutoDiff<Value, Deriv>(tanValue, ((Value)1 + tanValue*tanValue) * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> acos(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> acos(const AutoDiff<Value, Deriv> &y)
 {
-	// D(acos(x)) = -1/sqrt(1-x*x) * dx
-	return AutoDiffT<ValueT, DerivT>(acos(s.value()),
-		s.deriv() * (ValueT(-1)/sqrt(ValueT(1)-s.value()*s.value())));
+	// d(acos(x))/dx = -1/sqrt(1-y*y) * dy/dx
+	return AutoDiff<Value, Deriv>(acos(y.value()), (Value(-1)/sqrt(Value(1)-y.value()*y.value())) * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> atan2(const AutoDiffT<ValueT, DerivT> &y, const AutoDiffT<ValueT, DerivT> &x)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> sqrt(const AutoDiff<Value, Deriv> &y)
 {
-	// D(atan2(y, x)) = (x*dy - y*dx)/len
-	// len = x*x + y*y;
-	ValueT len = x.value()*x.value() + y.value()*y.value();
-
-	return AutoDiffT<ValueT, DerivT>(atan2(y.value(), x.value()),
-		(x.value()*y.deriv() - y.value()*x.deriv())/len);
+	// d(sqrt(y))/dx = 1/2 * 1/sqrt(y) * dy/dx
+	return AutoDiff<Value, Deriv>(sqrt(y.value()), Value(1)/Value(2) * Value(1)/sqrt(y.value()) * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> sqrt(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> log(const AutoDiff<Value, Deriv> &y)
 {
-//	if(s.value() == ValueT(0))
-//		return 0;
-
-	// D(sqrt(x)) = 1.0/2.0 * 1.0/sqrt(x) * dx
-	return AutoDiffT<ValueT, DerivT>(sqrt(s.value()),
-		ValueT(1)/ValueT(2) * ValueT(1)/sqrt(s.value()) * s.deriv());
+	// d(log(y))/dx = 1.0 / y * dy/dx
+	return AutoDiff<Value, Deriv>(log(y.value()), Value(1)/y.value() * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> log(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> pow(const AutoDiff<Value, Deriv> &y, const double &a)
 {
-	// D(log(x)) = 1.0 / x * dx
-	return AutoDiffT<ValueT, DerivT>(log(s.value()),
-		ValueT(1) / s.value() * s.deriv());
+	// d(y^a)/dx = a*y^{a-1} * dy/dx
+	return AutoDiff<Value, Deriv>(pow(y.value(), a), a*pow(y.value(), a-1) * y.deriv());
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> log10(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> pow(const AutoDiff<Value, Deriv> &y1, const AutoDiff<Value, Deriv> &y2)
 {
-	// TODO: implement!!
-	throw std::runtime_error("log10 autodiff not implemented yet");
-	// D(log(x)) = 1.0 / x * dx
-	return AutoDiffT<ValueT, DerivT>(log(s.value()),
-		ValueT(1) / s.value() * s.deriv());
+	// D(y1^y2) = y1^y2 * (dy1/dx*ln(y2) + (y2*dy1/dx)/y1)
+	return AutoDiff<Value, Deriv>(pow(y1.value(), y2.value()),
+								  pow(y1.value(), y2.value()) * (y2.deriv()*log(y1.value()) + y2.value()*y1.deriv()/y1.value()));
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> pow(const AutoDiffT<ValueT, DerivT> &s, const double &exponent)
-{
-	// D(x^b) = b*x^{b-1} * dx
-	return AutoDiffT<ValueT, DerivT>(pow(s.value(), exponent),
-		pow(s.value(), exponent-1) * s.deriv() * exponent);
-}
-
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> pow(const AutoDiffT<ValueT, DerivT> &s, const AutoDiffT<ValueT, DerivT> &exponent)
-{
-	// D(a^b) = a^b * (dbdx*ln(a) + b*dadx/a)
-	return AutoDiffT<ValueT, DerivT>(pow(s.value(), exponent.value()),
-		pow(s.value(), exponent.value()) * (exponent.deriv()*log(s.value()) + exponent.value()*s.deriv()/s.value()));
-}
-
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> fabs(const AutoDiffT<ValueT, DerivT> &s)
+template<class Value, class Deriv>
+AutoDiff<Value, Deriv> fabs(const AutoDiff<Value, Deriv> &s)
 {
 	if(s.value() >= 0)
 		return s;
@@ -234,25 +179,8 @@ AutoDiffT<ValueT, DerivT> fabs(const AutoDiffT<ValueT, DerivT> &s)
 		return -s;
 }
 
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> floor(const AutoDiffT<ValueT, DerivT> &s)
-{
-	// TODO: implement!!
-	throw std::runtime_error("floor autodiff not implemented yet");
-	return AutoDiffT<ValueT, DerivT>(floor(s.value()), 0); // this is wrong ...
-}
-
-template<class ValueT, class DerivT>
-AutoDiffT<ValueT, DerivT> ceil(const AutoDiffT<ValueT, DerivT> &s)
-{
-	// TODO: implement!!
-	throw std::runtime_error("ceil autodiff not implemented yet");
-	// D(log(x)) = 1.0 / x * dx
-	return AutoDiffT<ValueT, DerivT>(0, 0);
-}
-
-template<class ValueT, class DerivT>
-std::ostream& operator<<(std::ostream& stream, const AutoDiffT<ValueT, DerivT> &s) {
+template<class Value, class Deriv>
+std::ostream& operator<<(std::ostream& stream, const AutoDiff<Value, Deriv> &s) {
 	stream << s.value() << "(" << s.deriv() << ")";
 	return stream;
 }

@@ -12,8 +12,8 @@ using namespace CodeGen;
 using namespace Eigen;
 
 typedef RecType<double> R;
-typedef AutoDiffT<R, R> ADRec;
-typedef AutoDiffT<ADRec, ADRec> ADDRec;
+typedef AutoDiff<R, R> ADRec;
+typedef AutoDiff<ADRec, ADRec> ADDRec;
 template <class S> using Vector3 = Matrix<S, 3, 1>;
 template <class S> using Matrix3 = Matrix<S, 3, 3>;
 
