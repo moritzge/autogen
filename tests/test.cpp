@@ -58,7 +58,7 @@ TEST(CodeGenTest, GenerateCodeAndLoadLib) {
 	// and wrap it in a function
 	std::string libCode = "#include <cmath>\nextern \"C\" double compute_y(double a) {\ndouble y;\n";
 	libCode += code;
-	libCode += "return y;\n}\n";
+	libCode += "return y+1;\n}\n";
 
 	// make and load library
 	std::string libName = "compute_y";
