@@ -496,7 +496,7 @@ class NodeSub : public NodeBinaryOperationBasic<S>
 public:
 
 	NodeSub(Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
-		: NodeBinaryOperation<S>(nodeA, nodeB) {
+		: NodeBinaryOperationBasic<S>(nodeA, nodeB) {
 		this->init();
 	}
 
