@@ -72,6 +72,22 @@ public:
 		return *this;
 	}
 
+	bool operator>(const AutoDiff<Value, Deriv> &d) const {
+		return m_x > d.m_x;
+	}
+
+	bool operator<(const AutoDiff<Value, Deriv> &d) const {
+		return m_x < d.m_x;
+	}
+
+	bool operator>=(const AutoDiff<Value, Deriv> &d) const {
+		return m_x >= d.m_x;
+	}
+
+	bool operator<=(const AutoDiff<Value, Deriv> &d) const {
+		return m_x <= d.m_x;
+	}
+
 	const Value &value() const { return m_x; }
 	Value &value() { return m_x; }
 
