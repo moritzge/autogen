@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.0)
 # set name of the project
 project(AutoGen CXX)
 
+# directory 'cmake' contains macros to find thirdparty libraries
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
 set (CMAKE_CXX_STANDARD 11)
 
 # let's use some colors!
@@ -31,9 +34,6 @@ if (AUTOGEN_EIGEN_NO_DEBUG)
     add_definitions(-DEIGEN_NO_DEBUG)
 endif()
 
-# dependencies project-wide
-find_package(Eigen3 REQUIRED)
-
 # find_package(OpenMP)
 # if (OPENMP_FOUND)
 #     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -51,9 +51,11 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O1")
+if(UNIX)
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O1")
+endif()
 
 # AutoGen Library ################################################################
 # add source files
@@ -75,10 +77,15 @@ target_include_directories(
 set(AUTOGEN_BUILD_TESTS TRUE CACHE BOOL "Build AutoGen tests")
 message(STATUS "Building AutoGen Tests: ${BoldCyan} ${AUTOGEN_BUILD_TESTS} ${ColourReset}")
 if (AUTOGEN_BUILD_TESTS)
-
+  
     enable_testing()
+    if(NOT DEFINED GTEST_ROOT)
+      set(GTEST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../libs/gtest-1.7.0" CACHE PATH "Path to googletest")
+    endif()
     find_package(GTest REQUIRED)
     include_directories(${GTEST_INCLUDE_DIRS})
+
+    find_package(Eigen3 3 REQUIRED)
 
     file(GLOB test_sources
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
@@ -99,6 +106,8 @@ endif()
 set(AUTOGEN_BUILD_EXAMPLES FALSE CACHE BOOL "Build AutoGen examples")
 message(STATUS "Building AutoGen Examples: ${BoldCyan} ${AUTOGEN_BUILD_EXAMPLES} ${ColourReset}")
 if (AUTOGEN_BUILD_EXAMPLES)
+
+    find_package(Eigen3 REQUIRED)
 
     # example1
     file(GLOB src_ex1 ${CMAKE_CURRENT_SOURCE_DIR}/examples/example1.cpp)
