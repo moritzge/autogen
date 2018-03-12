@@ -138,6 +138,7 @@ TEST(GenerateCodeAndLoadLib, DotProduct) {
  */
 
 template <class S> using Vector3 = Eigen::Matrix<S, 3, 1>;
+template <class S> using Matrix3 = Eigen::Matrix<S, 3, 3>;
 
 template<class T>
 T computeDotAndCrossNorm(const Vector3<T> &a, const Vector3<T> &b) {
@@ -196,7 +197,7 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 	// make and load library
 	std::string error;
 	compute_extern* compute_CG;
-	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_CG", error));
+	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_grad", error));
 
 	// test it!
 	{
@@ -219,5 +220,132 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 		computeGradientFD(a, b, grad_FD);
 
 		EXPECT_NEAR(grad_CG.norm(), grad_FD.norm(), 1e-5);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////// TEST 4
+
+/*
+ * Testing: AutoDiff & CodeGenerator & AutoLoad
+ * Generate code for gradient and hessian
+ */
+
+
+void computeHessianFD(const Vector3<double> &a, const Vector3<double> &b, Matrix3<double> &hess) {
+
+	double h = 1e-5;
+
+	for (int i = 0; i < 3; ++i) {
+		Vector3<double> ap = a;
+		ap(i) += h;
+		Vector3<double> am = a;
+		am(i) -= h;
+
+		Vector3<double> gradp;
+		computeGradientFD(ap, b, gradp);
+		Vector3<double> gradm;
+		computeGradientFD(am, b, gradm);
+
+		for (int j = 0; j < 3; ++j) {
+			hess(i,j) = (gradp(j) - gradm(j)) / (2.*h);
+		}
+	}
+}
+
+TEST(GenerateCodeAndLoadLib, GradientAndHessian) {
+	using namespace AutoGen;
+	typedef RecType<double> R;
+	typedef AutoDiff<R, R> AD;
+	typedef AutoDiff<AD, AD> ADD;
+
+	// record computation
+	Vector3<ADD> a, b;
+	for (int i = 0; i < 3; ++i) {
+		a[i] = R("x[" + std::to_string(i) + "]");
+		b[i] = R("x[" + std::to_string(3+i) + "]");
+	}
+
+	CodeGenerator<double> generator;
+
+	// compute gradient and add to code gen
+	{
+		Vector3<R> grad;
+		for (int i = 0; i < 3; ++i) {
+			a(i).deriv() = 1.0;
+			ADD y = computeDotAndCrossNorm(a, b);
+			grad(i) = y.deriv().value();
+			a(i).deriv() = 0.0;
+		}
+		for (int i = 0; i < 3; ++i) {
+			grad(i).addToGeneratorAsResult(generator, "y[" + std::to_string(i) + "]");
+		}
+	}
+
+	//compute hessian and add to code gen
+	{
+		Matrix3<R> hess;
+		for (int i = 0; i < 3; ++i) {
+			a(i).deriv() = 1.0;
+			for (int j = 0; j < 3; ++j) {
+				a(j).value().deriv() = 1.0;
+				ADD y = computeDotAndCrossNorm(a, b);
+				hess(i,j) = y.deriv().deriv();
+				a(j).value().deriv() = 0.0;
+			}
+			a(i).deriv() = 0.0;
+		}
+
+		for (int i = 0; i < 3; ++i) {
+			for (int j = 0; j < 3; ++j)
+				hess(i,j).addToGeneratorAsResult(generator, "y[" + std::to_string(3+3*i+j) + "]");
+		}
+	}
+
+
+	generator.sortNodes();
+	std::string code = generator.generateCode();
+
+	// and wrap it in a function
+	std::string libCode = "#include <cmath>\nextern \"C\" void compute_extern(double* x, double* y) {\n;\n";
+	libCode += code;
+	libCode += "}\n";
+
+	// make and load library
+	std::string error;
+	compute_extern* compute_CG;
+	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_gradAndHess", error));
+
+	// test it!
+	{
+		Vector3<double> a;
+		a << 1.2, 3.4, 5.5;
+		Vector3<double> b;
+		b << 4.2, -0.1, 1.8;
+		double x[6];
+		for (int i = 0; i < 3; ++i) {
+			x[i] = a(i);
+			x[3+i] = b(i);
+		}
+
+		// compute with CG
+		double y[12];
+		compute_CG(x, y);
+		Vector3<double> grad_CG;
+		for (int i = 0; i < 3; ++i) {
+			grad_CG(i) = y[i];
+		}
+		Matrix3<double> hess_CG;
+		for (int i = 0; i < 9; ++i) {
+			hess_CG.data()[i] = y[3+i];
+		}
+
+		// compute with FD
+		Vector3<double> grad_FD;
+		computeGradientFD(a, b, grad_FD);
+		Matrix3<double> hess_FD;
+		computeHessianFD(a, b, hess_FD);
+
+		EXPECT_NEAR(grad_CG.norm(), grad_FD.norm(), 1e-5);
+		EXPECT_NEAR(hess_CG.norm(), hess_FD.norm(), 1e-3);
 	}
 }
