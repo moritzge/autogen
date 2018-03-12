@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.0)
 # set name of the project
 project(AutoGen CXX)
 
+# directory 'cmake' contains macros to find thirdparty libraries
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
 set (CMAKE_CXX_STANDARD 11)
 
 set(AUTOGEN_EIGEN_NO_DEBUG FALSE CACHE BOOL "Disable Eigen asserts")
