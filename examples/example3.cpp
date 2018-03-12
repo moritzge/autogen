@@ -8,7 +8,7 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 
-using namespace CodeGen;
+using namespace AutoGen;
 using namespace Eigen;
 
 typedef RecType<double> R;
@@ -433,13 +433,14 @@ void computeGradientHessianCG(const Vector3d &a, Vector3d &grad, Matrix3d &hess)
 
 template<class S>
 S compute(const Vector3<S> &a) {
-	Vector3<S> b;
-	b << 3, 4, 5;
+	Vector3<S> b = a+a;
 	Vector3<S> c = a+b;
 	Vector3<S> d = c.cross(a);
 	return c.dot(c) * d.norm();
 //	c.dot(c) / (c.norm());
 }
+
+
 
 void computeGradientFD(const Vector3d &a, Vector3d &grad) {
 
@@ -493,6 +494,44 @@ void generateCodeGradient() {
 		g(i).addToGeneratorAsResult(generator, "grad(" + std::to_string(i) + ")");
 		a(i).deriv() = 0.0;
 	}
+
+	generator.sortNodes();
+
+	std::cout << generator.generateCode() << std::endl;
+
+}
+
+void generateCodeGradientNew() {
+	typedef AutoDiff<R, Vector3<R>> ADRV3;
+
+	Vector3<ADRV3> a;
+	for (int i = 0; i < 3; ++i) {
+		a(i).value() = R("a("+std::to_string(i)+")");
+		Vector3<R> g(0,0,0);
+		g(i) = 1;
+		a(i).deriv() = g;
+	}
+
+
+	ADRV3 e = compute(a);
+	Vector3<R> gradient = e.deriv();
+	CodeGenerator<double> generator;
+
+	for (int i = 0; i < 3; ++i) {
+		gradient(i).addToGeneratorAsResult(generator, "grad(" + std::to_string(i) + ")");
+	}
+
+
+//	CodeGenerator<double> generator;
+
+//	Vector3<R> g;
+//	for (int i = 0; i < 3; ++i) {
+//		a(i).deriv() = 1.0;
+//		ADRec n = compute(a);
+//		g(i) = n.deriv();
+//		g(i).addToGeneratorAsResult(generator, "grad(" + std::to_string(i) + ")");
+//		a(i).deriv() = 0.0;
+//	}
 
 	generator.sortNodes();
 
@@ -584,8 +623,9 @@ int main(int argc, char *argv[])
 {
 
 	generateCodeGradient();
-	generateCodeHessian();
-	generateCodeGradientAndHessian();
+	generateCodeGradientNew();
+//	generateCodeHessian();
+//	generateCodeGradientAndHessian();
 
 	std::cout << std::setprecision(10);
 

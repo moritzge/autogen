@@ -4,6 +4,13 @@
  *
  * AutoGen can compile code and load the resulting dynamic library at runtime.
  *
+ * Usage:
+ * ```
+ * if(!buildLibrary(code, libName, error)) {
+ *		compute_extern* fnc = loadLibrary(libName);
+ *		fnc(x, y); // use function!
+ * }
+ * ```
  *
  * Currently this only works with g++ and on Linux. However, this should also
  * be possible on Windows and with the Visual compiler.
@@ -13,10 +20,14 @@
  *
  */
 
-#include "execCmd.h"
 #include <dlfcn.h>
+#include <fstream>
+#include <cstdlib>
+#include <chrono>
 
-namespace CodeGen {
+#include "execCmd.h"
+
+namespace AutoGen {
 
 // general function for code generator that is loaded during runtime
 //                            in     out
@@ -64,24 +75,46 @@ bool buildLibrary(const std::string &code, const std::string &libName, std::stri
 	return true;
 }
 
-compute_extern* loadLibrary(std::string libName) {
+bool loadLibrary(std::string libName, compute_extern* (&fnc)) {
 	// load the library
 	void* libCompute = dlopen((libName+"/lib"+ libName + ".so").c_str(), RTLD_LAZY);
 	if (!libCompute) {
 		std::cerr << "Cannot load library: " << dlerror() << '\n';
+		return false;
 	}
 
 	// reset errors
 	dlerror();
 
 	// load the symbols
-	compute_extern* comp_y = (compute_extern*) dlsym(libCompute, "compute_extern");
+	fnc = (compute_extern*) dlsym(libCompute, "compute_extern");
 	const char* dlsym_error = dlerror();
 	if (dlsym_error) {
 		std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
+		return false;
 	}
 
-	return comp_y;
+	return true;
+}
+
+bool buildAndLoad(const std::string &code, compute_extern* (&fnc), const std::string &name, std::string &error) {
+
+	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+	std::srand(ms.count()); // use current time as seed for random generator
+	int random_variable = std::rand();
+	std::string libName = "lib_"+name+"_"+std::to_string(random_variable);
+
+	if(!buildLibrary(code, libName, error))
+		return false;
+
+	if(!loadLibrary(libName, fnc))
+		return false;
+
+	return true;
+}
+
+bool buildAndLoad(const std::string &code, compute_extern* (&fnc), std::string &error) {
+	return buildAndLoad(code, fnc, "", error);
 }
 
 }

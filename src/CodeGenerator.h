@@ -9,7 +9,7 @@
 
 #include <stack>
 
-namespace CodeGen {
+namespace AutoGen {
 
 template <class T> using Sp = std::shared_ptr<T>;
 

@@ -7,7 +7,7 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 
-using namespace CodeGen;
+using namespace AutoGen;
 using namespace Eigen;
 
 typedef RecType<double> R;

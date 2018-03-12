@@ -35,7 +35,7 @@ double computeByHand(double a) {
 
 int main(int argc, char *argv[])
 {
-//	using namespace CodeGen;
+//	using namespace AutoGen;
 
 //	typedef RecType<double> R;
 
