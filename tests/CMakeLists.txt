@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 3.0)
+
+# set name of the project
+project(Tests CXX)
+
+find_package(Eigen3 REQUIRED)
+
+enable_testing()
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+file(GLOB test_sources
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+)
+
+add_executable(${PROJECT_NAME} ${test_sources})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+target_link_libraries(${PROJECT_NAME}
+    AutoGenLib
+    ${GTEST_BOTH_LIBRARIES}
+    -lpthread
+    ${CMAKE_DL_LIBS}
+    ) # need pthread for google test. TODO: does this link on Windows?
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+)
+
+add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
