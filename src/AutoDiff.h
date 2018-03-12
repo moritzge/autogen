@@ -15,7 +15,7 @@ public:
 	template<class T>
 	AutoDiff(const T &c) : m_x((Value)c), m_d((Deriv)0) {}
 
-	AutoDiff(const Value &x, const Deriv &d)	: m_x(x), m_d(d) {
+	AutoDiff(const Value &x, const Deriv &d) : m_x(x), m_d(d) {
 	}
 
 	bool operator==(const AutoDiff<Value, Deriv> &other) const {

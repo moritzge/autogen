@@ -5,27 +5,6 @@ project(AutoGen CXX)
 
 set (CMAKE_CXX_STANDARD 11)
 
-# let's use some colors!
-if(NOT WIN32)
-  string(ASCII 27 Esc)
-  set(ColourReset "${Esc}[m")
-  set(ColourBold  "${Esc}[1m")
-  set(Red         "${Esc}[31m")
-  set(Green       "${Esc}[32m")
-  set(Yellow      "${Esc}[33m")
-  set(Blue        "${Esc}[34m")
-  set(Magenta     "${Esc}[35m")
-  set(Cyan        "${Esc}[36m")
-  set(White       "${Esc}[37m")
-  set(BoldRed     "${Esc}[1;31m")
-  set(BoldGreen   "${Esc}[1;32m")
-  set(BoldYellow  "${Esc}[1;33m")
-  set(BoldBlue    "${Esc}[1;34m")
-  set(BoldMagenta "${Esc}[1;35m")
-  set(BoldCyan    "${Esc}[1;36m")
-  set(BoldWhite   "${Esc}[1;37m")
-endif()
-
 set(AUTOGEN_EIGEN_NO_DEBUG FALSE CACHE BOOL "Disable Eigen asserts")
 if (AUTOGEN_EIGEN_NO_DEBUG)
     add_definitions(-DEIGEN_NO_DEBUG)
@@ -73,7 +52,7 @@ target_include_directories(
 
 # Tests ##########################################################################
 set(AUTOGEN_BUILD_TESTS TRUE CACHE BOOL "Build AutoGen tests")
-message(STATUS "Building AutoGen Tests: ${BoldCyan} ${AUTOGEN_BUILD_TESTS} ${ColourReset}")
+message(STATUS "Building AutoGen Tests: ${AUTOGEN_BUILD_TESTS}")
 if (AUTOGEN_BUILD_TESTS)
 
     enable_testing()
@@ -97,7 +76,7 @@ endif()
 # Examples #######################################################################
 
 set(AUTOGEN_BUILD_EXAMPLES FALSE CACHE BOOL "Build AutoGen examples")
-message(STATUS "Building AutoGen Examples: ${BoldCyan} ${AUTOGEN_BUILD_EXAMPLES} ${ColourReset}")
+message(STATUS "Building AutoGen Examples: ${AUTOGEN_BUILD_EXAMPLES}")
 if (AUTOGEN_BUILD_EXAMPLES)
 
     # example1
