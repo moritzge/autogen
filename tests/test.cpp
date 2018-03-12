@@ -7,61 +7,7 @@
 
 #include <Eigen/Eigen>
 
-#include "execCmd.h"
-#include <dlfcn.h>
-
-
-////////////////////////////////////////////////////////////////////////// helper functions for building and loading library
-
-// general function for code generator that is loaded during runtime
-//                            in     out
-typedef void compute_extern(double*,double*);
-
-void buildLibrary(std::string code, std::string libName) {
-
-	// make dir
-	exec("mkdir -p " + libName);
-
-	// create cpp file
-	std::ofstream cppFile(libName+"/"+libName+".cpp");
-	cppFile << code;
-	cppFile.close();
-
-	// create CMakeLists.txt
-	std::ofstream cmakeFile(libName+"/CMakeLists.txt");
-	cmakeFile <<
-				 "cmake_minimum_required(VERSION 3.5 FATAL_ERROR)\n"
-				 "project(" << libName << ")\n"
-				 "file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.cpp)\n"
-				 "add_library(${PROJECT_NAME} SHARED ${sources})";
-	cmakeFile.close();
-
-//	std::string res = exec("g++ -fPIC -shared -o"+libName+"/"+libName+".so "+libName+"/"+libName+".cpp");
-	exec("cmake "+libName+"/CMakeLists.txt");
-	exec("cmake --build "+libName);
-
-}
-
-compute_extern* loadLibrary(std::string libName) {
-	// load the library
-	void* libCompute = dlopen((libName+"/lib"+ libName + ".so").c_str(), RTLD_LAZY);
-	if (!libCompute) {
-		std::cerr << "Cannot load library: " << dlerror() << '\n';
-	}
-
-	// reset errors
-	dlerror();
-
-	// load the symbols
-	compute_extern* comp_y = (compute_extern*) dlsym(libCompute, "compute_extern");
-	const char* dlsym_error = dlerror();
-	if (dlsym_error) {
-		std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
-	}
-
-	return comp_y;
-}
-
+#include <AutoLoad.h>
 
 ////////////////////////////////////////////////////////////////////////// TEST 1
 
@@ -196,6 +142,9 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 	generator.sortNodes();
 	std::string code = generator.generateCode();
 
+//	std::vector<ComputeUnit<double>> cunits = generator.generateComputeUnits();
+
+
 	// and wrap it in a function
 	std::string libCode = "#include <cmath>\nextern \"C\" void compute_extern(double* x, double* y) {\n;\n";
 	libCode += code;
@@ -203,6 +152,7 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 
 	// make and load library
 	std::string libName = "compute_gradient";
+
 	buildLibrary(libCode, libName);
 	compute_extern* compute_CG = loadLibrary(libName);
 

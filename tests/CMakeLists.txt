@@ -22,8 +22,7 @@ target_link_libraries(${PROJECT_NAME}
     AutoGenLib
     ${GTEST_BOTH_LIBRARIES}
     -lpthread
-    ${CMAKE_DL_LIBS}
-    ) # need pthread for google test. TODO: does this link on Windows?
+) # need pthread for google test. TODO: does this link on Windows?
 
 target_include_directories(
     ${PROJECT_NAME}
