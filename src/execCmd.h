@@ -6,18 +6,14 @@
 #include <array>
 #include <string>
 
-std::string exec(const char* cmd) {
+int exec(const std::string &cmd, std::string &out) {
 	std::array<char, 128> buffer;
-	std::string result;
-	std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+	std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"));
 	if (!pipe) throw std::runtime_error("popen() failed!");
 	while (!feof(pipe.get())) {
 		if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
-			result += buffer.data();
+			out += buffer.data();
 	}
-	return result;
-}
-
-std::string exec(std::string cmd) {
-	return exec(cmd.c_str());
+	int res = WEXITSTATUS(pclose(pipe.get()));
+	return res;
 }

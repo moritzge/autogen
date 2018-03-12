@@ -34,7 +34,8 @@ TEST(GenerateCodeAndLoadLib, ScalarCompute) {
 
 	// make and load library
 	std::string libName = "compute_y";
-	buildLibrary(libCode, libName);
+	std::string error;
+	EXPECT_TRUE(buildLibrary(libCode, libName, error));
 	compute_extern* comp_y = loadLibrary(libName);
 
 	// test it!
@@ -76,7 +77,8 @@ TEST(GenerateCodeAndLoadLib, DotProduct) {
 
 	// make and load library
 	std::string libName = "compute_somethingElse";
-	buildLibrary(libCode, libName);
+	std::string error;
+	EXPECT_TRUE(buildLibrary(libCode, libName, error));
 	compute_extern* compute = loadLibrary(libName);
 
 	// test it!
@@ -152,8 +154,8 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 
 	// make and load library
 	std::string libName = "compute_gradient";
-
-	buildLibrary(libCode, libName);
+	std::string error;
+	EXPECT_TRUE(buildLibrary(libCode, libName, error));
 	compute_extern* compute_CG = loadLibrary(libName);
 
 	// test it!

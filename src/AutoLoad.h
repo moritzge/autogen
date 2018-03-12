@@ -22,10 +22,14 @@ namespace CodeGen {
 //                            in     out
 typedef void compute_extern(double*,double*);
 
-void buildLibrary(std::string code, std::string libName) {
+bool buildLibrary(const std::string &code, const std::string &libName, std::string &error) {
 
 	// make dir
-	exec("mkdir -p " + libName);
+	std::string out;
+	if(exec("mkdir -p " + libName, out) != 0){
+		error = "Could not create directory: '" + libName + "'.";
+		return false;
+	}
 
 	// create cpp file
 	std::ofstream cppFile(libName+"/"+libName+".cpp");
@@ -33,13 +37,13 @@ void buildLibrary(std::string code, std::string libName) {
 	cppFile.close();
 
 #if defined(__clang__)
-	std::cout << "Using `clang++` to compile '" << libName << std::endl;
+	std::cout << "Using `clang++` to compile '" << libName << "'." << std::endl;
 	std::string compile_cmd = "clang++ -fPIC -shared -o "+libName+"/lib"+libName+".so "+libName+"/"+libName+".cpp";
 #elif defined(__GNUC__) || defined(__GNUG__)
-	std::cout << "Using `g++` to compile '" << libName << std::endl;
+	std::cout << "Using `g++` to compile '" << libName << "'." << std::endl;
 	std::string compile_cmd = "g++ -fPIC -shared -o "+libName+"/lib"+libName+".so "+libName+"/"+libName+".cpp";
 #else
-	std::cout << "Using `cmake --build` to compile '" << libName << std::endl;
+	std::cout << "Using `cmake --build` to compile '" << libName << "'." << std::endl;
 	// create CMakeLists.txt
 	std::ofstream cmakeFile(libName+"/CMakeLists.txt");
 	cmakeFile <<
@@ -52,8 +56,12 @@ void buildLibrary(std::string code, std::string libName) {
 	std::string compile_cmd = "cmake "+libName+"/CMakeLists.txt && cmake --build "+libName;
 #endif
 
-	std::string res = exec(compile_cmd);
-	std::cout << res << std::endl;
+	if(exec(compile_cmd, out) != 0){
+		error += "Failed to compile '" + libName + "'.";
+		return false;
+	}
+
+	return true;
 }
 
 compute_extern* loadLibrary(std::string libName) {
