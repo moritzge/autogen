@@ -98,13 +98,17 @@ bool loadLibrary(std::string libName, F* (&fncPtr), std::string fncName = "compu
 	return true;
 }
 
-template<class F>
-bool buildAndLoad(const std::string &code, F* (&fnc), const std::string &name, std::string &error) {
-
+std::string getPseudoUniqueLibName(std::string name = "") {
 	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 	std::srand(ms.count()); // use current time as seed for random generator
 	int random_variable = std::rand();
-	std::string libName = "lib_"+name+"_"+std::to_string(random_variable);
+	return "lib_"+name+"_"+std::to_string(random_variable);
+}
+
+template<class F>
+bool buildAndLoad(const std::string &code, F* (&fnc), const std::string &name, std::string &error) {
+
+	std::string libName = getPseudoUniqueLibName(name);
 
 	if(!buildLibrary(code, libName, error))
 		return false;
