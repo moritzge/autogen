@@ -21,7 +21,7 @@ TEST(GenerateCodeAndLoadLib, SuperSimpleTest) {
 
 	// and wrap it in a function
 	std::string libCode =
-			"extern \"C\" void compute_extern(double* x, double* y) {\n;\n"
+			"extern \"C\" void compute_extern(double* x, double* y) {\n"
 			+ code
 			+ "}\n";
 

@@ -75,7 +75,8 @@ bool buildLibrary(const std::string &code, const std::string &libName, std::stri
 	return true;
 }
 
-bool loadLibrary(std::string libName, compute_extern* (&fnc)) {
+template<class F>
+bool loadLibrary(std::string libName, F* (&fncPtr), std::string fncName = "compute_extern") {
 	// load the library
 	void* libCompute = dlopen((libName+"/lib"+ libName + ".so").c_str(), RTLD_LAZY);
 	if (!libCompute) {
@@ -87,7 +88,7 @@ bool loadLibrary(std::string libName, compute_extern* (&fnc)) {
 	dlerror();
 
 	// load the symbols
-	fnc = (compute_extern*) dlsym(libCompute, "compute_extern");
+	fncPtr = (F*) dlsym(libCompute, fncName.c_str());
 	const char* dlsym_error = dlerror();
 	if (dlsym_error) {
 		std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
@@ -97,7 +98,8 @@ bool loadLibrary(std::string libName, compute_extern* (&fnc)) {
 	return true;
 }
 
-bool buildAndLoad(const std::string &code, compute_extern* (&fnc), const std::string &name, std::string &error) {
+template<class F>
+bool buildAndLoad(const std::string &code, F* (&fnc), const std::string &name, std::string &error) {
 
 	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 	std::srand(ms.count()); // use current time as seed for random generator
@@ -113,7 +115,8 @@ bool buildAndLoad(const std::string &code, compute_extern* (&fnc), const std::st
 	return true;
 }
 
-bool buildAndLoad(const std::string &code, compute_extern* (&fnc), std::string &error) {
+template<class F>
+bool buildAndLoad(const std::string &code, F* (&fnc), std::string &error) {
 	return buildAndLoad(code, fnc, "", error);
 }
 
