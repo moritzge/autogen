@@ -874,9 +874,23 @@ RecType<S> pow(const RecType<S> &a, const RecType<S> &b) {
 
 template<class S>
 RecType<S> pow(const RecType<S> &a, S b) {
+
+	// TODO: test this
+	if(b == 1)
+		return a;
+	if(b == 0)
+		return 0;
+
 	Sp<const Node<S>> nodeB(new NodeConst<S>(b));
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), nodeB)));
 }
+
+// TODO: needed?
+//template<class S>
+//RecType<S> pow(S a, const RecType<S> &b) {
+//	Sp<const Node<S>> nodeA(new NodeConst<S>(a));
+//	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(nodeA, b.getNode())));
+//}
 
 }
 

@@ -120,6 +120,14 @@ AutoDiff<Value, Deriv> operator*(const Value &a, const AutoDiff<Value, Deriv> &y
 	return AutoDiff<Value, Deriv>(a * y.value(), a * y.deriv());
 }
 
+// TODO: test this!
+template<class S, class Value, class Deriv>
+AutoDiff<Value, Deriv> operator*(const S &a, const AutoDiff<Value, Deriv> &y)
+{
+	// d(a*y)/dx = a*dy/dx
+	return AutoDiff<Value, Deriv>(a * y.value(), a * y.deriv());
+}
+
 template<class Value, class Deriv>
 AutoDiff<Value, Deriv> operator/(const Value &a, const AutoDiff<Value, Deriv> &y)
 {
