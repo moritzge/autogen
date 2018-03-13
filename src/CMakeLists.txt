@@ -12,6 +12,8 @@ file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 add_library(${PROJECT_NAME} STATIC ${sources})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC AUTOGEN_SRC_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 target_link_libraries(
     ${PROJECT_NAME} 
     ${CMAKE_DL_LIBS}
