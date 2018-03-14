@@ -25,3 +25,10 @@ add_executable(Example3 ${src_ex3})
 set_target_properties(Example3 PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(Example3 AutoGenLib)
 target_include_directories(Example3 PUBLIC ${EIGEN3_INCLUDE_DIR})
+
+# example4
+file(GLOB src_ex4 ${CMAKE_CURRENT_SOURCE_DIR}/example4.cpp)
+add_executable(Example4 ${src_ex4})
+set_target_properties(Example4 PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(Example4 AutoGenLib)
+target_include_directories(Example4 PUBLIC ${EIGEN3_INCLUDE_DIR})
