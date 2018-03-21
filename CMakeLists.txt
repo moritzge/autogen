@@ -35,7 +35,9 @@ add_subdirectory(src)
 set(AUTOGEN_BUILD_TESTS TRUE CACHE BOOL "Build AutoGen tests")
 message(STATUS "Building AutoGen Tests: ${AUTOGEN_BUILD_TESTS}")
 if (AUTOGEN_BUILD_TESTS)
+	enable_testing()
 	add_subdirectory(tests)
+	# add_test(Tests Tests)
 endif()
 
 # Examples

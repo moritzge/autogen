@@ -8,4 +8,4 @@ build-autogen:
   - cd build
   - cmake ..
   - make
-  - make test
+  - ./tests/Tests

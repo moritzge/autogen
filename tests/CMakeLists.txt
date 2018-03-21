@@ -5,7 +5,6 @@ project(Tests CXX)
 
 find_package(Eigen3 REQUIRED)
 
-enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
@@ -30,4 +29,5 @@ target_include_directories(
         ${EIGEN3_INCLUDE_DIR}
 )
 
-add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
+enable_testing()
+add_test(${PROJECT_NAME} ${PROJECT_NAME})
