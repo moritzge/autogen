@@ -875,7 +875,7 @@ RecType<S> sqrt(const RecType<S> &other) {
 }
 
 double sqrt(const double &other) {
-	return sqrt(other);
+	return std::sqrt(other);
 }
 
 template<class S>
@@ -897,7 +897,7 @@ RecType<S> pow(const RecType<S> &a, S b) {
 }
 
 double pow(const double &a, const double &b) {
-	return pow(a, b);
+	return std::pow(a, b);
 }
 
 
