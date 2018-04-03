@@ -8,6 +8,7 @@
 
 #include <ostream>
 #include <cmath>
+#include <math.h>
 #include <cassert>
 
 #include <algorithm>
@@ -40,11 +41,14 @@ public:
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const = 0;
 
 	virtual uint64_t getHash() const {
-		if(mIsHashValid)
-			return mCachedHash;
+		if (!mIsHashValid)
+		{
+			mCachedHash = this->computeHash();
+			mIsHashValid = true;
 
-		mCachedHash = computeHash();
-		mIsHashValid = true;
+		}
+
+		return mCachedHash;
 	}
 
 	virtual uint64_t getHashId() const { return 0; }
@@ -106,7 +110,7 @@ public:
 	void addNode(const Node<S>* node) {
 
 		// check if we have the same hashed node already
-		size_t hash = node->getHash();
+		uint64_t hash = node->getHash();
 		assert(mHashedNodes.find(hash) == mHashedNodes.end());
 
 		mNodes.push_back(hash);
@@ -116,7 +120,7 @@ public:
 	const VarDef& getVar(const Node<S>* node) const {
 		assert(node);
 
-		size_t h = node->getHash();
+		uint64_t h = node->getHash();
 		auto it = mHashedNodes.find(h);
 		assert(it != mHashedNodes.end());
 		return it->second.second;
@@ -149,7 +153,7 @@ public:
 			// does the generator already have a same-hashed node?
 			const Node<S>* hashedNode = getHashedNode(nodeVisiting);
 			// if not, let's add it and remember to visit children
-			if(!hashedNode) {
+			if(hashedNode == nullptr) {
 
 				addNode(nodeVisiting);
 				for (int i = 0; i < nodeVisiting->getNumChildren(); ++i) {
@@ -870,6 +874,10 @@ RecType<S> sqrt(const RecType<S> &other) {
 	return RecType<S>(Sp<const Node<S>>(new NodeSqrt<S>(other.getNode())));
 }
 
+double sqrt(const double &other) {
+	return sqrt(other);
+}
+
 template<class S>
 RecType<S> pow(const RecType<S> &a, const RecType<S> &b) {
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), b.getNode())));
@@ -882,11 +890,16 @@ RecType<S> pow(const RecType<S> &a, S b) {
 	if(b == 1)
 		return a;
 	if(b == 0)
-		return 0;
+		return 1;
 
 	Sp<const Node<S>> nodeB(new NodeConst<S>(b));
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), nodeB)));
 }
+
+double pow(const double &a, const double &b) {
+	return pow(a, b);
+}
+
 
 // TODO: needed?
 //template<class S>
