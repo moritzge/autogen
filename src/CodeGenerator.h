@@ -1,12 +1,16 @@
-#include <iostream>
+#pragma once
 
+#include <iostream>
 #include <memory>
 #include <map>
 #include <string>
+#include <vector>
 
-#include "AutoDiff.h"
+#include <ostream>
+#include <cmath>
+#include <cassert>
 
-#include <stack>
+#include <algorithm>
 
 namespace AutoGen {
 
