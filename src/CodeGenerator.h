@@ -961,7 +961,7 @@ double pow(const double &a, const double &b) {
 
 template<class S>
 template<typename F, typename... A>
-std::string CodeGenerator<S>::generateGradientCode(Vector3<ADR> &dofs, F &&f, A&&... a)
+std::string CodeGenerator<S>::generateGradientCode(Vector3<ADR> &variables, F &&f, A&&... a)
 {
 	for (size_t i = 0; i < 3; i++)
 	{
