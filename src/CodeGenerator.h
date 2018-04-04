@@ -941,10 +941,13 @@ typedef RecType<double> R;
 typedef AutoDiff<R, R> ADR;
 typedef AutoDiff<ADR, ADR> ADDR;
 
+template <class S, int N> using VectorXN = Eigen::Matrix<S, N, 1>;
+
 template <class S>
-class VectorX : public Eigen::Matrix<S, -1, 1>
+class VectorX : public VectorXN<S, -1>
 {
 public:
+	VectorX() : VectorXN<S, -1>() {}
 	VectorX(int size, const std::string &name)
 	{
 		this->resize(size);
@@ -955,10 +958,15 @@ public:
 };
 
 template <class S>
-class Vector3 : public VectorX<S>
+class Vector3 : public VectorXN<S, 3>
 {
 public:
-	Vector3(const std::string &name) : VectorX<S>(3, name) {}
+	Vector3() : VectorXN<S, 3>() {}
+	Vector3(const std::string &name) {
+		for (int i = 0; i < 3; ++i) {
+			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
+		}
+	}
 };
 
 
