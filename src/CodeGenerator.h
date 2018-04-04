@@ -20,6 +20,9 @@ template <class T> using Sp = std::shared_ptr<T>;
 template<class S>
 class CodeGenerator;
 
+template<class S>
+class VectorX;
+
 enum NodeType { REGULAR_NODE, INPUT_NODE, OUTPUT_NODE };
 
 template<class S>
@@ -100,6 +103,9 @@ private:
 
 template<class S>
 class NodeConst;
+
+template<class S>
+class RecType;
 
 template<class S>
 class CodeGenerator
@@ -227,6 +233,21 @@ public:
 		}
 
 		return code;
+	}
+
+	template<class T>
+	std::string generateGradientCode(std::function<RecType<S>()> energyFunction, const VectorX<T> &variables)
+	{
+		for (size_t i = 0; i < variables.size(); i++)
+		{
+			variables[i].deriv() = 1;
+			RecType<S> grad = energyFunction().deriv();
+			grad.addToGeneratorAsResult(generator, "g_" + std::to_string(i));
+			x1[i].deriv() = 0;
+		}
+
+		generator.sortNodes();
+		return generator.generateCode();
 	}
 
 private:
@@ -907,6 +928,38 @@ double pow(const double &a, const double &b) {
 //	Sp<const Node<S>> nodeA(new NodeConst<S>(a));
 //	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(nodeA, b.getNode())));
 //}
+
+// Helpers
+
+typedef AutoDiff<double, double> AD;
+typedef AutoDiff<AD, AD> ADD;
+
+typedef RecType<double> R;
+
+typedef AutoDiff<R, R> ADR;
+typedef AutoDiff<ADR, ADR> ADDR;
+
+template <class S>
+class VectorX : public Eigen::Matrix<S, -1, 1>
+{
+public:
+	VectorX(int size, const std::string &name)
+	{
+		this->resize(size);
+		for (int i = 0; i < 3; ++i) {
+			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
+		}
+	}
+};
+
+template <class S>
+class Vector3 : public VectorX<S>
+{
+public:
+	Vector3(const std::string &name) : VectorX(3, name) {}
+};
+
+
 
 }
 
