@@ -15,6 +15,8 @@
 
 #include <Eigen/Eigen>
 
+#include<utility>
+
 namespace AutoGen {
 
 template <class T> using Sp = std::shared_ptr<T>;
@@ -22,8 +24,54 @@ template <class T> using Sp = std::shared_ptr<T>;
 template<class S>
 class CodeGenerator;
 
+
+////////////////////////////////////////////////////////////////////////////////
 template<class S>
 class VectorX;
+
+template <class S, int N> using VectorXN = Eigen::Matrix<S, N, 1>;
+
+template<class S>
+class Vector3;
+
+template<class S>
+class RecType;
+
+typedef AutoDiff<double, double> AD;
+typedef AutoDiff<AD, AD> ADD;
+
+typedef RecType<double> R;
+
+typedef AutoDiff<R, R> ADR;
+typedef AutoDiff<ADR, ADR> ADDR;
+
+template <class S>
+class VectorX : public VectorXN<S, -1>
+{
+public:
+	VectorX() : VectorXN<S, -1>() {}
+	VectorX(int size, const std::string &name)
+	{
+		this->resize(size);
+		for (int i = 0; i < 3; ++i) {
+			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
+		}
+	}
+};
+
+template <class S>
+class Vector3 : public VectorXN<S, 3>
+{
+public:
+	Vector3() : VectorXN<S, 3>() {}
+	Vector3(const std::string &name) {
+		for (int i = 0; i < 3; ++i) {
+			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
+		}
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 enum NodeType { REGULAR_NODE, INPUT_NODE, OUTPUT_NODE };
 
@@ -237,20 +285,8 @@ public:
 		return code;
 	}
 
-	template<class T>
-	std::string generateGradientCode(std::function<RecType<S>()> energyFunction, const VectorX<T> &variables)
-	{
-		for (size_t i = 0; i < variables.size(); i++)
-		{
-			variables[i].deriv() = 1;
-			RecType<S> grad = energyFunction().deriv();
-			grad.addToGeneratorAsResult(*this, "g_" + std::to_string(i));
-			variables[i].deriv() = 0;
-		}
-
-		sortNodes();
-		return generateCode();
-	}
+	template<typename F, typename... A>
+	std::string generateGradientCode(Vector3<ADR> &dofs, F &&f, A&&... a);
 
 private:
 	void addChildrenTo(const Node<S>* node, std::vector<uint64_t> &nodesNew) const {
@@ -923,6 +959,23 @@ double pow(const double &a, const double &b) {
 	return std::pow(a, b);
 }
 
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateGradientCode(Vector3<ADR> &dofs, F &&f, A&&... a)
+{
+	for (size_t i = 0; i < 3; i++)
+	{
+		dofs(i).deriv() = 1;
+		ADR energy = std::forward<F>(f)(std::forward<A>(a)...);
+		RecType<S> grad = energy.deriv();
+		grad.addToGeneratorAsResult(*this, "g_" + std::to_string(i));
+		dofs[i].deriv() = 0;
+	}
+
+	sortNodes();
+	return generateCode();
+}
+
 
 // TODO: needed?
 //template<class S>
@@ -932,43 +985,6 @@ double pow(const double &a, const double &b) {
 //}
 
 // Helpers
-
-typedef AutoDiff<double, double> AD;
-typedef AutoDiff<AD, AD> ADD;
-
-typedef RecType<double> R;
-
-typedef AutoDiff<R, R> ADR;
-typedef AutoDiff<ADR, ADR> ADDR;
-
-template <class S, int N> using VectorXN = Eigen::Matrix<S, N, 1>;
-
-template <class S>
-class VectorX : public VectorXN<S, -1>
-{
-public:
-	VectorX() : VectorXN<S, -1>() {}
-	VectorX(int size, const std::string &name)
-	{
-		this->resize(size);
-		for (int i = 0; i < 3; ++i) {
-			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
-		}
-	}
-};
-
-template <class S>
-class Vector3 : public VectorXN<S, 3>
-{
-public:
-	Vector3() : VectorXN<S, 3>() {}
-	Vector3(const std::string &name) {
-		for (int i = 0; i < 3; ++i) {
-			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
-		}
-	}
-};
-
 
 
 }
