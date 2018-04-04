@@ -53,20 +53,36 @@ public:
 	VectorX(int size, const std::string &name)
 	{
 		this->resize(size);
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < size; ++i) {
 			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
 		}
 	}
 };
 
 template <class S>
-class Vector3 : public VectorXN<S, 3>
+class Vector3 : public VectorX<S>
 {
 public:
-	Vector3() : VectorXN<S, 3>() {}
-	Vector3(const std::string &name) {
-		for (int i = 0; i < 3; ++i) {
-			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
+	Vector3() : VectorX<S>(3) {}
+	Vector3(const std::string &name) : VectorX<S>(3, name)
+	{
+	}
+};
+
+template <class S>
+class VarListX : public VectorXN<S*, -1>
+{
+public:
+	
+	VarListX(int size) : VectorXN<S*, -1>(size)
+	{
+	}
+
+	void assignSegment(int idx, int size, VectorX<S> &vars)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			(*this)[idx + i] = &vars[i];
 		}
 	}
 };
@@ -212,7 +228,7 @@ public:
 			if(hashedNode == nullptr) {
 
 				addNode(nodeVisiting);
-				for (int i = 0; i < nodeVisiting->getNumChildren(); ++i) {
+				for (size_t i = 0; i < nodeVisiting->getNumChildren(); ++i) {
 					nodesToVisit.push_back(nodeVisiting->getChild(i).get());
 				}
 			}
@@ -232,7 +248,7 @@ public:
 		// topological sort
 		std::vector<uint64_t> nodesNew;
 //		for (auto h : mNodes) {
-		for (int i = 0; i < mNodes.size(); ++i) {
+		for (size_t i = 0; i < mNodes.size(); ++i) {
 			uint64_t h = mNodes[i];
 			const Node<S>* node = mHashedNodes[h].first;
 			assert(node != nullptr);
@@ -241,7 +257,7 @@ public:
 
 		// move input/output nodes to front/back
 		std::vector<int> nodesIn, nodesOut;
-		for (int i = 0; i < nodesNew.size(); ++i) {
+		for (size_t i = 0; i < nodesNew.size(); ++i) {
 			uint64_t h = nodesNew[i];
 			const Node<S>* node = mHashedNodes[h].first;
 			if(node->getNodeType() == INPUT_NODE) nodesIn.push_back(i);
@@ -253,7 +269,7 @@ public:
 			nodesNew2.push_back(nodesNew[i]);
 		}
 
-		for (int i = 0; i < nodesNew.size(); ++i) {
+		for (size_t i = 0; i < nodesNew.size(); ++i) {
 			if(std::find(nodesIn.begin(), nodesIn.end(), i) != nodesIn.end())
 				continue;
 			if(std::find(nodesOut.begin(), nodesOut.end(), i) != nodesOut.end())
@@ -272,13 +288,13 @@ public:
 
 		// update variable index
 		int counter = 0;
-		for (int i = 0; i < mNodes.size(); ++i) {
+		for (size_t i = 0; i < mNodes.size(); ++i) {
 			mHashedNodes[mNodes[i]].second.setIndex(counter++);
 		}
 
 		// write code
 		std::string code;
-		for (int i = 0; i < mNodes.size(); ++i) {
+		for (size_t i = 0; i < mNodes.size(); ++i) {
 			code += mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
 		}
 
@@ -286,7 +302,16 @@ public:
 	}
 
 	template<typename F, typename... A>
-	std::string generateGradientCode(Vector3<ADR> &dofs, F &&f, A&&... a);
+	std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	std::string generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	std::string generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	std::string generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
 private:
 	void addChildrenTo(const Node<S>* node, std::vector<uint64_t> &nodesNew) const {
@@ -294,7 +319,7 @@ private:
 		uint64_t h = node->getHash();
 		if(std::find(nodesNew.begin(), nodesNew.end(), h) == nodesNew.end()) {
 			// first make sure children are added
-			for (int i = 0; i < node->getNumChildren(); ++i) {
+			for (size_t i = 0; i < node->getNumChildren(); ++i) {
 				addChildrenTo(node->getChild(i).get(), nodesNew);
 			}
 			// and then add this node
@@ -961,15 +986,81 @@ double pow(const double &a, const double &b) {
 
 template<class S>
 template<typename F, typename... A>
-std::string CodeGenerator<S>::generateGradientCode(Vector3<ADR> &variables, F &&f, A&&... a)
+std::string CodeGenerator<S>::generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a)
 {
 	for (size_t i = 0; i < 3; i++)
 	{
-		dofs(i).deriv() = 1;
+		(*variables[i]).deriv() = 1;
 		ADR energy = std::forward<F>(f)(std::forward<A>(a)...);
 		RecType<S> grad = energy.deriv();
-		grad.addToGeneratorAsResult(*this, "g_" + std::to_string(i));
-		dofs[i].deriv() = 0;
+		grad.addToGeneratorAsResult(*this, "g[" + std::to_string(i) + "]");
+		(*variables[i]).deriv() = 0;
+	}
+
+	sortNodes();
+	return generateCode();
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
+{
+	for (size_t i = 0; i < 3; i++)
+	{
+		(*variables[i]).deriv() = 1;
+		ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+		RecType<S> grad = energy.deriv().value();
+		grad.addToGeneratorAsResult(*this, "g[" + std::to_string(i) + "]");
+		(*variables[i]).deriv() = 0;
+	}
+
+	sortNodes();
+	return generateCode();
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
+{
+	for (size_t i = 0; i < 3; i++)
+	{
+		(*variables[i]).deriv() = 1;
+
+		ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+		RecType<S> grad = energy.deriv().value();
+		grad.addToGeneratorAsResult(*this, "g[" + std::to_string(i) + "]");
+
+		for (size_t j = 0; j < 3; j++)
+		{
+			(*variables[i]).value().deriv() = 1;
+			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+			RecType<S> hess = energy.deriv().deriv();
+			hess.addToGeneratorAsResult(*this, "hess[" + std::to_string(i) + "][" + std::to_string(j) + "]");
+			(*variables[i]).value().deriv() = 0;
+		}
+		(*variables[i]).deriv() = 0;
+	}
+
+	sortNodes();
+	return generateCode();
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
+{
+	for (size_t i = 0; i < 3; i++)
+	{
+		(*variables[i]).deriv() = 1;
+		for (size_t j = 0; j < 3; j++)
+		{
+			(*variables[i]).value().deriv() = 1;
+			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+			RecType<S> hess = energy.deriv().deriv();
+			hess.addToGeneratorAsResult(*this, "hess(" + std::to_string(i) + ", " + std::to_string(j) + ")");
+			(*variables[i]).value().deriv() = 0;
+		}
+		(*variables[i]).deriv() = 0;
 	}
 
 	sortNodes();
