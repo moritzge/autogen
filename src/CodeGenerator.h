@@ -13,6 +13,8 @@
 
 #include <algorithm>
 
+#include <Eigen/Eigen>
+
 namespace AutoGen {
 
 template <class T> using Sp = std::shared_ptr<T>;
@@ -242,12 +244,12 @@ public:
 		{
 			variables[i].deriv() = 1;
 			RecType<S> grad = energyFunction().deriv();
-			grad.addToGeneratorAsResult(generator, "g_" + std::to_string(i));
-			x1[i].deriv() = 0;
+			grad.addToGeneratorAsResult(*this, "g_" + std::to_string(i));
+			variables[i].deriv() = 0;
 		}
 
-		generator.sortNodes();
-		return generator.generateCode();
+		sortNodes();
+		return generateCode();
 	}
 
 private:
@@ -956,7 +958,7 @@ template <class S>
 class Vector3 : public VectorX<S>
 {
 public:
-	Vector3(const std::string &name) : VectorX(3, name) {}
+	Vector3(const std::string &name) : VectorX<S>(3, name) {}
 };
 
 
