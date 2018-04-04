@@ -94,6 +94,11 @@ public:
 	const Deriv &deriv() const { return m_d; }
 	Deriv &deriv() { return m_d; }
 
+	virtual std::string getName()
+	{
+		return m_x.getName();
+	}
+
 private:
 	Value m_x;			// value
 	Deriv m_d;			// derivative

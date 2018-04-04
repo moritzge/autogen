@@ -7,6 +7,10 @@
 #include <vector>
 
 #include <ostream>
+#include <iostream>
+#include <fstream>
+#include <typeinfo>
+#include <experimental/filesystem>
 #include <cmath>
 #include <math.h>
 #include <cassert>
@@ -52,11 +56,20 @@ public:
 	VectorX() : VectorXN<S, -1>() {}
 	VectorX(int size, const std::string &name)
 	{
+		mVarName = name;
 		this->resize(size);
 		for (int i = 0; i < size; ++i) {
 			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
 		}
 	}
+
+	std::string getName()
+	{
+		return mVarName;
+	}
+
+protected:
+	std::string mVarName;
 };
 
 template <class S>
@@ -128,6 +141,11 @@ public:
 
 	static uint64_t rol(uint64_t x, int d) {
 		return (x << d) | (x >> (64-d));
+	}
+
+	virtual std::string getName() const
+	{
+		return "NoName";
 	}
 
 protected:
@@ -301,17 +319,75 @@ public:
 		return code;
 	}
 
+	template <typename A>
+	void addNameToList(std::vector<std::string> &typeList, A arg) {
+		typeList.push_back(arg.getName());
+	}
+
+	template <typename A>
+	void addTypeToList(std::vector<std::string> &typeList, A arg) {
+		
+	}
+
+	template<typename... A>
+	void writeCodeToFile(const std::string &fileName, const std::string &code, A&&... a)
+	{
+		std::string folderName = "./GeneratedCode";
+		std::experimental::filesystem::create_directories(folderName);
+
+		std::ofstream file;
+		file.open(folderName + "/" + fileName + ".cpp");
+		std::vector<std::string> nameList;
+		auto tmpname = { (addNameToList(nameList, a),0)... };
+		std::vector<std::string> typeList;
+		auto tmptype = { (addTypeToList(typeList, a),0)... };
+		file << code;
+		file.close();
+	}
+
 	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	void generateGradientCode(const std::string &fileName, VarListX<ADR> &variables, F &&f, A&&... a)
+	{
+		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
+
+		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+	}
 
 	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
+	void generateGradientCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
+	{
+		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
+
+		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+	}
+
+	template<typename F, typename... A>
 	std::string generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
+	void generateHessianCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
+	{
+		std::string code = generateHessianCode(variables, f, std::forward<A>(a)...);
+
+		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+	}
+
+	template<typename F, typename... A>
 	std::string generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	void generateGradientAndHessianCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
+	{
+		std::string code = generateGradientAndHessianCode(variables, f, std::forward<A>(a)...);
+
+		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+	}
 
 private:
 	void addChildrenTo(const Node<S>* node, std::vector<uint64_t> &nodesNew) const {
@@ -412,6 +488,11 @@ public:
 	virtual uint64_t computeHash() const {
 		std::hash<std::string> hashS;
 		return hashS(mVarName);
+	}
+
+	virtual std::string getName() const
+	{
+		return mVarName;
 	}
 
 private:
@@ -927,6 +1008,11 @@ public:
 		Node<S>* nodeRes = new NodeResult<S>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
+	}
+
+	std::string getName()
+	{
+		return mNode->getName();
 	}
 
 private:
