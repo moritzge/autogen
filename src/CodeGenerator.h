@@ -73,7 +73,7 @@ public:
 	VectorX() : VectorXN<S, -1>() {}
 	VectorX(int size, const std::string &name)
 	{
-		mVarName = name;
+		m_varName = name;
 		this->resize(size);
 		for (int i = 0; i < size; ++i) {
 			(*this)[i] = S(name + "[" + std::to_string(i) + "]");
@@ -82,7 +82,7 @@ public:
 
 	virtual std::string getName()
 	{
-		return mVarName;
+		return m_varName;
 	}
 
 	virtual std::string getGeneratedType()
@@ -91,7 +91,7 @@ public:
 	}
 
 protected:
-	std::string mVarName;
+	std::string m_varName;
 };
 
 template <class S>
@@ -168,11 +168,6 @@ public:
 
 	static uint64_t rol(uint64_t x, int d) {
 		return (x << d) | (x >> (64-d));
-	}
-
-	virtual std::string getName() const
-	{
-		return "NoName";
 	}
 
 protected:
@@ -590,11 +585,6 @@ public:
 	virtual uint64_t computeHash() const {
 		std::hash<std::string> hashS;
 		return hashS(mVarName);
-	}
-
-	virtual std::string getName() const
-	{
-		return mVarName;
 	}
 
 private:
@@ -1110,11 +1100,6 @@ public:
 		Node<S>* nodeRes = new NodeResult<S>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
-	}
-
-	std::string getName()
-	{
-		return mNode->getName();
 	}
 
 private:
