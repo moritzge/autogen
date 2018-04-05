@@ -29,6 +29,22 @@ template<class S>
 class CodeGenerator;
 
 
+// Helper functions
+template <typename A>
+void addNameToList(std::vector<std::string> &typeList, A arg) {
+	typeList.push_back(arg.getName());
+}
+
+template <typename A>
+void addTypeToList(std::vector<std::string> &typeList, A arg) {
+	typeList.push_back(arg.getGeneratedType());
+}
+
+const std::string gradName = "grad";
+#define getGradType(type, size)	("Eigen::Vector<" + type + ", " + std::to_string(size) + ">")
+const std::string hessName = "hess";
+#define getHessType(type, size)	("Eigen::Matrix<" + type + ", " + std::to_string(size) + ", " + std::to_string(size) + ">")
+
 ////////////////////////////////////////////////////////////////////////////////
 template<class S>
 class VectorX;
@@ -102,6 +118,11 @@ public:
 		{
 			(*this)[idx + i] = &vars[i];
 		}
+	}
+
+	virtual std::string getGeneratedType()
+	{
+		return "Eigen::Matrix<" + (*this)[0]->getGeneratedType() + ", " + std::to_string(this->size()) + ", 1>";
 	}
 };
 
@@ -324,83 +345,119 @@ public:
 		return code;
 	}
 
-	template <typename A>
-	void addNameToList(std::vector<std::string> &typeList, A arg) {
-		typeList.push_back(arg.getName());
-	}
-
-	template <typename A>
-	void addTypeToList(std::vector<std::string> &typeList, A arg) {
-		typeList.push_back(arg.getGeneratedType());
-	}
-
 	template<typename... A>
-	void writeCodeToFile(const std::string &fileName, const std::string &code, A&&... a)
+	void writeCodeToFile(const std::string &fileName, const std::vector<std::string> &returnTypes, const std::vector<std::string> &returnNames, const std::string &code, A&&... a)
 	{
+		// Create Directory
 		std::string folderName = "./GeneratedCode";
 		std::experimental::filesystem::create_directories(folderName);
 
+		// Create file
 		std::ofstream file;
 		file.open(folderName + "/" + fileName + ".cpp");
+
+		// Fetch argument names and types
 		std::vector<std::string> nameList;
 		auto tmpname = { (addNameToList(nameList, a),0)... };
 		std::vector<std::string> typeList;
 		auto tmptype = { (addTypeToList(typeList, a),0)... };
+
+		// Write function name
 		file << fileName << "(";
+		// Write function arguments
 		for (size_t i = 0; i < nameList.size(); i++)
 		{
-			file << "const " << typeList[i] << " &" << nameList[i];
-			if (i < nameList.size() - 1)
+			file << "const " << typeList[i] << " &" << nameList[i] << ", ";
+		}
+		// Write function return type and name
+		for (size_t i = 0; i < returnTypes.size(); i++)
+		{
+			file << returnTypes[i] << " &" << returnNames[i];
+			if (i< returnTypes.size() - 1)
 				file << ", ";
 		}
+		// Finish function signature and write generted code
 		file << ")\n{\n";
 		file << code;
 		file << "}";
+
+		// Close file
 		file.close();
 	}
 
+	template<typename... A>
+	void writeCodeToFile(const std::string &fileName, std::string &returnType, const std::string &returnName,  const std::string &code, A&&... a)
+	{
+		std::vector<std::string> returnTypes, returnNames;
+		returnTypes.push_back(returnType);
+		returnNames.push_back(returnName);
+		writeCodeToFile(fileName, returnTypes, returnNames, code, a...);
+	}
+
+	// Code Generation for ADR
 	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
-	void generateGradientCode(const std::string &fileName, VarListX<ADR> &variables, F &&f, A&&... a)
+	void printGradientCode(const std::string &fileName, VarListX<ADR> &variables, F &&f, A&&... a)
 	{
 		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
 
-		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+		std::string type = variables[0]->getGeneratedType();
+
+		std::string gradType = getGradType(type, variables.size());
+
+		writeCodeToFile(fileName + "_computeGradient", gradType, gradName, code, std::forward<A>(a)...);
 	}
 
+	// Code Generation for ADDR
 	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
-	void generateGradientCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
+	void printGradientCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
 	{
 		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
 
-		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+		std::string type = variables[0]->getGeneratedType();
+
+		std::string gradType = getGradType(type, variables.size());
+
+		writeCodeToFile(fileName + "_computeGradient", gradType, gradName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
 	std::string generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
-	void generateHessianCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
+	void printHessianCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
 	{
 		std::string code = generateHessianCode(variables, f, std::forward<A>(a)...);
 
-		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+		std::string type = variables[0]->getGeneratedType();
+
+		std::string hessType = getHessType(type, variables.size());
+
+		writeCodeToFile(fileName + "_computeHessian", hessType, hessName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
 	std::string generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
-	void generateGradientAndHessianCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
+	void printGradientAndHessianCode(const std::string &fileName, VarListX<ADDR> &variables, F &&f, A&&... a)
 	{
 		std::string code = generateGradientAndHessianCode(variables, f, std::forward<A>(a)...);
 
-		writeCodeToFile(fileName, code, std::forward<A>(a)...);
+		std::string type = variables[0]->getGeneratedType();
+
+		std::string gradType = getGradType(type, variables.size());
+		std::string hessType = getHessType(type, variables.size());
+
+		std::vector<std::string> outputTypes = { gradType, hessType };
+		std::vector<std::string> outputNames = { gradName, hessName };
+
+		writeCodeToFile(fileName + "_computeGradientAndHessian", outputTypes, outputNames, code, std::forward<A>(a)...);
 	}
 
 private:
@@ -1093,7 +1150,7 @@ std::string CodeGenerator<S>::generateGradientCode(const VarListX<ADR> &variable
 		(*variables[i]).deriv() = 1;
 		ADR energy = std::forward<F>(f)(std::forward<A>(a)...);
 		RecType<S> grad = energy.deriv();
-		grad.addToGeneratorAsResult(*this, "g[" + std::to_string(i) + "]");
+		grad.addToGeneratorAsResult(*this, "grad[" + std::to_string(i) + "]");
 		(*variables[i]).deriv() = 0;
 	}
 
@@ -1110,34 +1167,7 @@ std::string CodeGenerator<S>::generateGradientCode(const VarListX<ADDR> &variabl
 		(*variables[i]).deriv() = 1;
 		ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
 		RecType<S> grad = energy.deriv().value();
-		grad.addToGeneratorAsResult(*this, "g[" + std::to_string(i) + "]");
-		(*variables[i]).deriv() = 0;
-	}
-
-	sortNodes();
-	return generateCode();
-}
-
-template<class S>
-template<typename F, typename... A>
-std::string CodeGenerator<S>::generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
-{
-	for (size_t i = 0; i < 3; i++)
-	{
-		(*variables[i]).deriv() = 1;
-
-		ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
-		RecType<S> grad = energy.deriv().value();
-		grad.addToGeneratorAsResult(*this, "g[" + std::to_string(i) + "]");
-
-		for (size_t j = 0; j < 3; j++)
-		{
-			(*variables[i]).value().deriv() = 1;
-			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
-			RecType<S> hess = energy.deriv().deriv();
-			hess.addToGeneratorAsResult(*this, "hess[" + std::to_string(i) + "][" + std::to_string(j) + "]");
-			(*variables[i]).value().deriv() = 0;
-		}
+		grad.addToGeneratorAsResult(*this, gradName + "[" + std::to_string(i) + "]");
 		(*variables[i]).deriv() = 0;
 	}
 
@@ -1152,12 +1182,39 @@ std::string CodeGenerator<S>::generateGradientAndHessianCode(const VarListX<ADDR
 	for (size_t i = 0; i < 3; i++)
 	{
 		(*variables[i]).deriv() = 1;
+
+		ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+		RecType<S> grad = energy.deriv().value();
+		grad.addToGeneratorAsResult(*this, gradName + "[" + std::to_string(i) + "]");
+
 		for (size_t j = 0; j < 3; j++)
 		{
 			(*variables[i]).value().deriv() = 1;
 			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
 			RecType<S> hess = energy.deriv().deriv();
-			hess.addToGeneratorAsResult(*this, "hess(" + std::to_string(i) + ", " + std::to_string(j) + ")");
+			hess.addToGeneratorAsResult(*this, hessName + "(" + std::to_string(i) + ", " + std::to_string(j) + ")");
+			(*variables[i]).value().deriv() = 0;
+		}
+		(*variables[i]).deriv() = 0;
+	}
+
+	sortNodes();
+	return generateCode();
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
+{
+	for (size_t i = 0; i < 3; i++)
+	{
+		(*variables[i]).deriv() = 1;
+		for (size_t j = 0; j < 3; j++)
+		{
+			(*variables[i]).value().deriv() = 1;
+			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+			RecType<S> hess = energy.deriv().deriv();
+			hess.addToGeneratorAsResult(*this, hessName + "(" + std::to_string(i) + ", " + std::to_string(j) + ")");
 			(*variables[i]).value().deriv() = 0;
 		}
 		(*variables[i]).deriv() = 0;
