@@ -342,7 +342,7 @@ public:
 	}
 
 	template<typename... A>
-	void writeCodeToFile(const std::string &fileName, const std::vector<std::string> &returnTypes, const std::vector<std::string> &returnNames, const std::string &code, A&&... a)
+	void writeCodeToFile(const std::string &fileName, const std::string &functionName, const std::vector<std::string> &returnTypes, const std::vector<std::string> &returnNames, const std::string &code, A&&... a)
 	{
 		// Create Directory
 		std::string folderName = "./GeneratedCode";
@@ -350,7 +350,7 @@ public:
 
 		// Create file
 		std::ofstream file;
-		file.open(folderName + "/" + fileName + ".cpp");
+		file.open(folderName + "/" + fileName + "_AutoGen_" + functionName + ".h");
 
 		// Fetch argument names and types
 		std::vector<std::string> nameList;
@@ -358,8 +358,10 @@ public:
 		std::vector<std::string> typeList;
 		auto tmptype = { (addTypeToList(typeList, a),0)... };
 
+		// Namespace
+		file << "namespace " << fileName << "_AutoGen{\n";
 		// Write function name
-		file << "void " << fileName << "(";
+		file << "void " << functionName << "(";
 		// Write function arguments
 		for (size_t i = 0; i < nameList.size(); i++)
 		{
@@ -379,19 +381,21 @@ public:
 		// Finish function signature and write generted code
 		file << ")\n{\n";
 		file << code;
-		file << "}";
+		file << "}\n";
+		// close namespace
+		file << "}\n";
 
 		// Close file
 		file.close();
 	}
 
 	template<typename... A>
-	void writeCodeToFile(const std::string &fileName, std::string &returnType, const std::string &returnName,  const std::string &code, A&&... a)
+	void writeCodeToFile(const std::string &fileName, const std::string &functionName, std::string &returnType, const std::string &returnName,  const std::string &code, A&&... a)
 	{
 		std::vector<std::string> returnTypes, returnNames;
 		returnTypes.push_back(returnType);
 		returnNames.push_back(returnName);
-		writeCodeToFile(fileName, returnTypes, returnNames, code, a...);
+		writeCodeToFile(fileName, functionName, returnTypes, returnNames, code, a...);
 	}
 
 	// Code Generation for ADR
@@ -405,7 +409,7 @@ public:
 
 		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
 
-		writeCodeToFile(fileName + "_computeEnergy", type, energyName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "computeEnergy", type, energyName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -420,7 +424,7 @@ public:
 
 		std::string gradType = getGradType(type, variables.size());
 
-		writeCodeToFile(fileName + "_computeGradient", gradType, gradName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "computeGradient", gradType, gradName, code, std::forward<A>(a)...);
 	}
 
 	// Code Generation for ADDR
@@ -434,7 +438,7 @@ public:
 
 		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
 
-		writeCodeToFile(fileName + "_computeEnergy", type, energyName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "computeEnergy", type, energyName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -449,7 +453,7 @@ public:
 
 		std::string gradType = getGradType(type, variables.size());
 
-		writeCodeToFile(fileName + "_computeGradient", gradType, gradName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "computeGradient", gradType, gradName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -464,7 +468,7 @@ public:
 
 		std::string hessType = getHessType(type, variables.size());
 
-		writeCodeToFile(fileName + "_computeHessian", hessType, hessName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "computeHessian", hessType, hessName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -483,7 +487,7 @@ public:
 		std::vector<std::string> outputTypes = { gradType, hessType };
 		std::vector<std::string> outputNames = { gradName, hessName };
 
-		writeCodeToFile(fileName + "_computeGradientAndHessian", outputTypes, outputNames, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "computeGradientAndHessian", outputTypes, outputNames, code, std::forward<A>(a)...);
 	}
 
 private:
