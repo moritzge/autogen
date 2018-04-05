@@ -99,6 +99,18 @@ public:
 		return m_x.getName();
 	}
 
+	virtual std::string getGeneratedType()
+	{
+		std::string currentType = typeid(m_d).name();
+
+		// We assume the innerest node hase a value like double or float
+		int start = currentType.find_last_of('<') + 1;
+		int end = currentType.find_first_of('>');
+		std::string type = currentType.substr(start, end - start);
+
+		return type;
+	}
+
 private:
 	Value m_x;			// value
 	Deriv m_d;			// derivative

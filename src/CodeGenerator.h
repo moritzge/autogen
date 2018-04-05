@@ -63,9 +63,14 @@ public:
 		}
 	}
 
-	std::string getName()
+	virtual std::string getName()
 	{
 		return mVarName;
+	}
+
+	virtual std::string getGeneratedType()
+	{
+		return "Eigen::Matrix<" + (*this)[0].getGeneratedType() + ", " + std::to_string(this->size()) + ", 1>";
 	}
 
 protected:
@@ -326,7 +331,7 @@ public:
 
 	template <typename A>
 	void addTypeToList(std::vector<std::string> &typeList, A arg) {
-		
+		typeList.push_back(arg.getGeneratedType());
 	}
 
 	template<typename... A>
@@ -341,7 +346,16 @@ public:
 		auto tmpname = { (addNameToList(nameList, a),0)... };
 		std::vector<std::string> typeList;
 		auto tmptype = { (addTypeToList(typeList, a),0)... };
+		file << fileName << "(";
+		for (size_t i = 0; i < nameList.size(); i++)
+		{
+			file << "const " << typeList[i] << " &" << nameList[i];
+			if (i < nameList.size() - 1)
+				file << ", ";
+		}
+		file << ")\n{\n";
 		file << code;
+		file << "}";
 		file.close();
 	}
 
