@@ -105,8 +105,10 @@ public:
 
 		// We assume the innerest node hase a value like double or float
 		int start = currentType.find_last_of('<') + 1;
-		int end = currentType.find_first_of('>');
-		std::string type = currentType.substr(start, end - start);
+		std::string typeAndTail = currentType.substr(start);
+
+		int end = typeAndTail.find_first_of('>');
+		std::string type = typeAndTail.substr(0, end);
 
 		return type;
 	}
