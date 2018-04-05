@@ -40,6 +40,7 @@ void addTypeToList(std::vector<std::string> &typeList, A arg) {
 	typeList.push_back(arg.getGeneratedType());
 }
 
+const std::string energyName = "E";
 const std::string gradName = "grad";
 #define getGradType(type, size)	("Eigen::Vector<" + type + ", " + std::to_string(size) + ">")
 const std::string hessName = "hess";
@@ -363,15 +364,19 @@ public:
 		auto tmptype = { (addTypeToList(typeList, a),0)... };
 
 		// Write function name
-		file << fileName << "(";
+		file << "void " << fileName << "(";
 		// Write function arguments
 		for (size_t i = 0; i < nameList.size(); i++)
 		{
-			file << "const " << typeList[i] << " &" << nameList[i] << ", ";
+			file << "const " << typeList[i] << " &" << nameList[i];
+			if (i< nameList.size() - 1)
+				file << ", ";
 		}
 		// Write function return type and name
 		for (size_t i = 0; i < returnTypes.size(); i++)
 		{
+			if (i == 0)
+				file << ", ";
 			file << returnTypes[i] << " &" << returnNames[i];
 			if (i< returnTypes.size() - 1)
 				file << ", ";
@@ -396,6 +401,19 @@ public:
 
 	// Code Generation for ADR
 	template<typename F, typename... A>
+	std::string generateEnergyCodeADR(F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	void printEnergyCodeADR(const std::string &fileName, F &&f, A&&... a)
+	{
+		std::string code = generateEnergyCodeADR(f, std::forward<A>(a)...);
+
+		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
+
+		writeCodeToFile(fileName + "_computeEnergy", type, energyName, code, std::forward<A>(a)...);
+	}
+
+	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
@@ -411,6 +429,19 @@ public:
 	}
 
 	// Code Generation for ADDR
+	template<typename F, typename... A>
+	std::string generateEnergyCodeADDR(F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	void printEnergyCodeADDR(const std::string &fileName, F &&f, A&&... a)
+	{
+		std::string code = generateEnergyCodeADDR(f, std::forward<A>(a)...);
+
+		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
+
+		writeCodeToFile(fileName + "_computeEnergy", type, energyName, code, std::forward<A>(a)...);
+	}
+
 	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a);
 
@@ -1139,6 +1170,30 @@ RecType<S> pow(const RecType<S> &a, S b) {
 
 double pow(const double &a, const double &b) {
 	return std::pow(a, b);
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateEnergyCodeADR(F &&f, A&&... a)
+{
+	ADR energy = std::forward<F>(f)(std::forward<A>(a)...);
+	RecType<S> E = energy.value();
+	E.addToGeneratorAsResult(*this, energyName);
+
+	sortNodes();
+	return generateCode();
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateEnergyCodeADDR(F &&f, A&&... a)
+{
+	ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+	RecType<S> E = energy.value().value();
+	E.addToGeneratorAsResult(*this, energyName);
+
+	sortNodes();
+	return generateCode();
 }
 
 template<class S>
