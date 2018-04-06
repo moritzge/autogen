@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CODE_GENERATOR_H
+#define CODE_GENERATOR_H
 
 #include <iostream>
 #include <memory>
@@ -1281,3 +1282,4 @@ std::string CodeGenerator<S>::generateHessianCode(const VarListX<ADDR> &variable
 
 }
 
+#endif
