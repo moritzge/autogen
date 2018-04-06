@@ -42,7 +42,7 @@ void addTypeToList(std::vector<std::string> &typeList, A arg) {
 
 const std::string energyName = "E";
 const std::string gradName = "grad";
-#define getGradType(type, size)	("Eigen::Vector<" + type + ", " + std::to_string(size) + ">")
+#define getGradType(type, size)	("Eigen::Matrix<" + type + ", " + std::to_string(size) + ", 1>")
 const std::string hessName = "hess";
 #define getHessType(type, size)	("Eigen::Matrix<" + type + ", " + std::to_string(size) + ", " + std::to_string(size) + ">")
 
@@ -409,7 +409,7 @@ public:
 
 		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
 
-		writeCodeToFile(fileName, "computeEnergy", type, energyName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "compute_E", type, energyName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -424,7 +424,7 @@ public:
 
 		std::string gradType = getGradType(type, variables.size());
 
-		writeCodeToFile(fileName, "computeGradient", gradType, gradName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "compute_dE_dx", gradType, gradName, code, std::forward<A>(a)...);
 	}
 
 	// Code Generation for ADDR
@@ -438,7 +438,7 @@ public:
 
 		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
 
-		writeCodeToFile(fileName, "computeEnergy", type, energyName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "compute_E", type, energyName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -453,7 +453,7 @@ public:
 
 		std::string gradType = getGradType(type, variables.size());
 
-		writeCodeToFile(fileName, "computeGradient", gradType, gradName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "compute_dE_dx", gradType, gradName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -468,7 +468,7 @@ public:
 
 		std::string hessType = getHessType(type, variables.size());
 
-		writeCodeToFile(fileName, "computeHessian", hessType, hessName, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "compute_ddE_dxdx", hessType, hessName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -487,7 +487,7 @@ public:
 		std::vector<std::string> outputTypes = { gradType, hessType };
 		std::vector<std::string> outputNames = { gradName, hessName };
 
-		writeCodeToFile(fileName, "computeGradientAndHessian", outputTypes, outputNames, code, std::forward<A>(a)...);
+		writeCodeToFile(fileName, "compute_dE_dx_and_ddE_dxdx", outputTypes, outputNames, code, std::forward<A>(a)...);
 	}
 
 private:
@@ -1189,7 +1189,7 @@ template<class S>
 template<typename F, typename... A>
 std::string CodeGenerator<S>::generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a)
 {
-	for (size_t i = 0; i < 3; i++)
+	for (size_t i = 0; i < variables.size(); i++)
 	{
 		(*variables[i]).deriv() = 1;
 		ADR energy = std::forward<F>(f)(std::forward<A>(a)...);
@@ -1206,7 +1206,7 @@ template<class S>
 template<typename F, typename... A>
 std::string CodeGenerator<S>::generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
 {
-	for (size_t i = 0; i < 3; i++)
+	for (size_t i = 0; i < variables.size(); i++)
 	{
 		(*variables[i]).deriv() = 1;
 		ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
@@ -1223,7 +1223,7 @@ template<class S>
 template<typename F, typename... A>
 std::string CodeGenerator<S>::generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
 {
-	for (size_t i = 0; i < 3; i++)
+	for (size_t i = 0; i < variables.size(); i++)
 	{
 		(*variables[i]).deriv() = 1;
 
@@ -1233,11 +1233,11 @@ std::string CodeGenerator<S>::generateGradientAndHessianCode(const VarListX<ADDR
 
 		for (size_t j = 0; j < 3; j++)
 		{
-			(*variables[i]).value().deriv() = 1;
+			(*variables[j]).value().deriv() = 1;
 			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
 			RecType<S> hess = energy.deriv().deriv();
 			hess.addToGeneratorAsResult(*this, hessName + "(" + std::to_string(i) + ", " + std::to_string(j) + ")");
-			(*variables[i]).value().deriv() = 0;
+			(*variables[j]).value().deriv() = 0;
 		}
 		(*variables[i]).deriv() = 0;
 	}
@@ -1250,16 +1250,16 @@ template<class S>
 template<typename F, typename... A>
 std::string CodeGenerator<S>::generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
 {
-	for (size_t i = 0; i < 3; i++)
+	for (size_t i = 0; i < variables.size(); i++)
 	{
 		(*variables[i]).deriv() = 1;
-		for (size_t j = 0; j < 3; j++)
+		for (size_t j = 0; j < variables.size(); j++)
 		{
-			(*variables[i]).value().deriv() = 1;
+			(*variables[j]).value().deriv() = 1;
 			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
 			RecType<S> hess = energy.deriv().deriv();
 			hess.addToGeneratorAsResult(*this, hessName + "(" + std::to_string(i) + ", " + std::to_string(j) + ")");
-			(*variables[i]).value().deriv() = 0;
+			(*variables[j]).value().deriv() = 0;
 		}
 		(*variables[i]).deriv() = 0;
 	}
