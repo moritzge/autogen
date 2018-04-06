@@ -99,7 +99,7 @@ template <class S>
 class Vector3 : public VectorX<S>
 {
 public:
-	Vector3() : VectorX<S>(3) {}
+	Vector3() : VectorX<S>(3, "NoName") {}
 	Vector3(const std::string &name) : VectorX<S>(3, name)
 	{
 	}
@@ -110,6 +110,10 @@ class VarListX : public VectorXN<S*, -1>
 {
 public:
 	
+	VarListX() : VectorXN<S*, -1>()
+	{
+	}
+
 	VarListX(int size) : VectorXN<S*, -1>(size)
 	{
 	}
