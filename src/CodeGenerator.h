@@ -46,6 +46,9 @@ const std::string gradName = "grad";
 #define getGradType(type, size)	("Eigen::Matrix<" + type + ", " + std::to_string(size) + ", 1>")
 const std::string hessName = "hess";
 #define getHessType(type, size)	("Eigen::Matrix<" + type + ", " + std::to_string(size) + ", " + std::to_string(size) + ">")
+const std::string jacobianName = "J";
+#define getJacobianType(type, size1, size2)	("Eigen::Matrix<" + type + ", " + std::to_string(size1) + ", " + std::to_string(size2) + ">")
+
 
 ////////////////////////////////////////////////////////////////////////////////
 template<class S>
@@ -474,6 +477,25 @@ public:
 		std::string hessType = getHessType(type, variables.size());
 
 		writeCodeToFile(fileName, "compute_ddE_dxdx", hessType, hessName, code, std::forward<A>(a)...);
+	}
+
+	template<typename F, typename... A>
+	std::string generateJacobianCode(const VarListX<ADDR> &firstVariables, const VarListX<ADDR> &secondVariables, F &&f, A&&... a);
+
+	template<typename F, typename... A>
+	void printJacobianCode(const std::string &fileName, const VarListX<ADDR> &firstVariables, const VarListX<ADDR> &secondVariables, const std::string &secondVariablesName, F &&f, A&&... a)
+	{
+		std::string code = generateJacobianCode(firstVariables, secondVariables, f, std::forward<A>(a)...);
+
+		std::string type;
+		std::string type1 = firstVariables[0]->getGeneratedType();
+		std::string type2 = firstVariables[0]->getGeneratedType();
+		assert(type1.compare(type2) == 0);
+		type = type1;
+
+		std::string jacobianType = getJacobianType(type, firstVariables.size(), secondVariables.size());
+
+		writeCodeToFile(fileName, "compute_ddE_dxd" + secondVariablesName, jacobianType, jacobianName, code, std::forward<A>(a)...);
 	}
 
 	template<typename F, typename... A>
@@ -1267,6 +1289,28 @@ std::string CodeGenerator<S>::generateHessianCode(const VarListX<ADDR> &variable
 			(*variables[j]).value().deriv() = 0;
 		}
 		(*variables[i]).deriv() = 0;
+	}
+
+	sortNodes();
+	return generateCode();
+}
+
+template<class S>
+template<typename F, typename... A>
+std::string CodeGenerator<S>::generateJacobianCode(const VarListX<ADDR> &firstVariables, const VarListX<ADDR> &secondVariables, F &&f, A&&... a)
+{
+	for (size_t i = 0; i < firstVariables.size(); i++)
+	{
+		(*firstVariables[i]).deriv() = 1;
+		for (size_t j = 0; j < secondVariables.size(); j++)
+		{
+			(*secondVariables[j]).value().deriv() = 1;
+			ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
+			RecType<S> J = energy.deriv().deriv();
+			J.addToGeneratorAsResult(*this, jacobianName + "(" + std::to_string(i) + ", " + std::to_string(j) + ")");
+			(*secondVariables[j]).value().deriv() = 0;
+		}
+		(*firstVariables[i]).deriv() = 0;
 	}
 
 	sortNodes();
