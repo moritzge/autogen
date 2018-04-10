@@ -11,7 +11,6 @@ using namespace AutoGen;
 using namespace Eigen;
 
 typedef RecType<double> R;
-template <class S> using Vector3 = Matrix<S, 3, 1>;
 
 double computeCG(const Vector3d &a) {
 

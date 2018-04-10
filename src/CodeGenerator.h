@@ -18,7 +18,9 @@
 
 #include <algorithm>
 
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
+
+#include "AutoDiff.h"
 
 #include<utility>
 
@@ -55,9 +57,7 @@ template<class S>
 class VectorX;
 
 template <class S, int N> using VectorXN = Eigen::Matrix<S, N, 1>;
-
-template<class S>
-class Vector3;
+template <class S> using Vector3 = VectorXN<S, 3>;
 
 template<class S>
 class RecType;
@@ -71,11 +71,11 @@ typedef AutoDiff<R, R> ADR;
 typedef AutoDiff<ADR, ADR> ADDR;
 
 template <class S>
-class VectorX : public VectorXN<S, -1>
+class VectorXn : public VectorXN<S, -1>
 {
 public:
-	VectorX() : VectorXN<S, -1>() {}
-	VectorX(int size, const std::string &name)
+	VectorXn() : VectorXN<S, -1>() {}
+	VectorXn(int size, const std::string &name)
 	{
 		m_varName = name;
 		this->resize(size);
@@ -99,11 +99,11 @@ protected:
 };
 
 template <class S>
-class Vector3 : public VectorX<S>
+class Vector3n : public VectorXn<S>
 {
 public:
-	Vector3() : VectorX<S>(3, "NoName") {}
-	Vector3(const std::string &name) : VectorX<S>(3, name)
+	Vector3n() : VectorXn<S>(3, "NoName") {}
+	Vector3n(const std::string &name) : VectorX<S>(3, name)
 	{
 	}
 };
@@ -1201,9 +1201,9 @@ RecType<S> sqrt(const RecType<S> &other) {
 	return RecType<S>(Sp<const Node<S>>(new NodeSqrt<S>(other.getNode())));
 }
 
-double sqrt(const double &other) {
-	return std::sqrt(other);
-}
+//double sqrt(const double &other) {
+//	return std::sqrt(other);
+//}
 
 template<class S>
 RecType<S> pow(const RecType<S> &a, const RecType<S> &b) {

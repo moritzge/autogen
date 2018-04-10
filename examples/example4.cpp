@@ -11,7 +11,6 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace AutoGen;
 using namespace Eigen;
 
-template <class S> using Vector3 = Matrix<S, 3, 1>;
 template <class S> using Matrix3 = Matrix<S, 3, 3>;
 
 typedef AutoDiff<double, double> AD;

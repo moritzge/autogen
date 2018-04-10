@@ -13,13 +13,10 @@ public:
 	}
 
 	template<class T>
-	AutoDiff(const T &c) : m_x((Value)c), m_d((Deriv)0)
-	{
-		m_name = c;
+	AutoDiff(const T &c) : m_x((Value)c), m_d((Deriv)0)	{
 	}
 
 	AutoDiff(const Value &x, const Deriv &d) : m_x(x), m_d(d) {
-		m_name = "NoName";
 	}
 
 	bool operator==(const AutoDiff<Value, Deriv> &other) const {
@@ -98,11 +95,6 @@ public:
 	const Deriv &deriv() const { return m_d; }
 	Deriv &deriv() { return m_d; }
 
-	virtual std::string getName()
-	{
-		return m_name;
-	}
-
 	virtual std::string getGeneratedType()
 	{
 		std::string currentType = typeid(m_d).name();
@@ -120,7 +112,6 @@ public:
 private:
 	Value m_x;			// value
 	Deriv m_d;			// derivative
-	std::string m_name;
 };
 
 template<class Value, class Deriv>

@@ -28,6 +28,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O1")
 
+find_package(Eigen3 REQUIRED)
+
 # Library
 add_subdirectory(src)
 
