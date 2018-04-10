@@ -129,10 +129,27 @@ public:
 		}
 	}
 
+	virtual std::string getInnerType()
+	{
+		std::string currentType = typeid(*this).name();
+
+		// We assume the innerest node hase a value like double or float
+		int start = currentType.find_last_of('<') + 1;
+		std::string typeAndTail = currentType.substr(start);
+
+		int end = typeAndTail.find_first_of('>');
+		std::string type = typeAndTail.substr(0, end);
+
+		return type;
+	}
+
 	virtual std::string getGeneratedType()
 	{
-		return "Eigen::Matrix<" + (*this)[0]->getGeneratedType() + ", " + std::to_string(this->size()) + ", 1>";
+		std::string innerType = getInnerType();
+		return "Eigen::Matrix<" + innerType + ", " + std::to_string(this->size()) + ", 1>";
 	}
+
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -421,6 +438,16 @@ public:
 	}
 
 	template<typename F, typename... A>
+	void printEnergyCodeADR_customName(const std::string &fileName, const std::string &customEnergyName, F &&f, A&&... a)
+	{
+		std::string code = generateEnergyCodeADR(f, std::forward<A>(a)...);
+
+		std::string type = std::forward<F>(f)(std::forward<A>(a)...).getGeneratedType();
+
+		writeCodeToFile(fileName, "compute_" + customEnergyName, type, energyName, code, std::forward<A>(a)...);
+	}
+
+	template<typename F, typename... A>
 	std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
@@ -428,11 +455,23 @@ public:
 	{
 		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
 
-		std::string type = variables[0]->getGeneratedType();
+		std::string type = variables.getInnerType();
 
 		std::string gradType = getGradType(type, variables.size());
 
 		writeCodeToFile(fileName, "compute_dE_dx", gradType, gradName, code, std::forward<A>(a)...);
+	}
+
+	template<typename F, typename... A>
+	void printGradientCode_customName(const std::string &fileName, const std::string &customEnergyName, VarListX<ADR> &variables, const std::string &variablesName,F &&f, A&&... a)
+	{
+		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
+
+		std::string type = variables.getInnerType();
+
+		std::string gradType = getGradType(type, variables.size());
+
+		writeCodeToFile(fileName, "compute_d" + customEnergyName + "_d" + variablesName, gradType, gradName, code, std::forward<A>(a)...);
 	}
 
 	// Code Generation for ADDR
@@ -457,7 +496,7 @@ public:
 	{
 		std::string code = generateGradientCode(variables, f, std::forward<A>(a)...);
 
-		std::string type = variables[0]->getGeneratedType();
+		std::string type = variables.getInnerType();
 
 		std::string gradType = getGradType(type, variables.size());
 
@@ -472,7 +511,7 @@ public:
 	{
 		std::string code = generateHessianCode(variables, f, std::forward<A>(a)...);
 
-		std::string type = variables[0]->getGeneratedType();
+		std::string type = variables.getInnerType();
 
 		std::string hessType = getHessType(type, variables.size());
 
@@ -483,13 +522,13 @@ public:
 	std::string generateJacobianCode(const VarListX<ADDR> &firstVariables, const VarListX<ADDR> &secondVariables, F &&f, A&&... a);
 
 	template<typename F, typename... A>
-	void printJacobianCode(const std::string &fileName, const VarListX<ADDR> &firstVariables, const VarListX<ADDR> &secondVariables, const std::string &secondVariablesName, F &&f, A&&... a)
+	void printJacobianCode(const std::string &fileName, VarListX<ADDR> &firstVariables, VarListX<ADDR> &secondVariables, const std::string &secondVariablesName, F &&f, A&&... a)
 	{
 		std::string code = generateJacobianCode(firstVariables, secondVariables, f, std::forward<A>(a)...);
 
 		std::string type;
-		std::string type1 = firstVariables[0]->getGeneratedType();
-		std::string type2 = firstVariables[0]->getGeneratedType();
+		std::string type1 = firstVariables.getInnerType();
+		std::string type2 = secondVariables.getInnerType();
 		assert(type1.compare(type2) == 0);
 		type = type1;
 
@@ -506,7 +545,7 @@ public:
 	{
 		std::string code = generateGradientAndHessianCode(variables, f, std::forward<A>(a)...);
 
-		std::string type = variables[0]->getGeneratedType();
+		std::string type = variables.getInnerType();
 
 		std::string gradType = getGradType(type, variables.size());
 		std::string hessType = getHessType(type, variables.size());
