@@ -1,12 +1,11 @@
-
-//#include <Eigen/Eigen>
+#include <gtest/gtest.h>
 
 #include <AutoDiff.h>
+#include <RecType.h>
 #include <AutoLoad.h>
 #include <CodeGenerator.h>
 
-//typedef AutoGen::Vector3 Vector3;
-//template <class S> using Vector3 = AutoGen::Vector3<S>;
+template <class S> using Vector3 = Eigen::Matrix<S, 3, 1>;
 
 ////////////////////////////////////////////////////////////////////////// TEST 0
 
@@ -94,7 +93,7 @@ TEST(GenerateCodeAndLoadLib, ScalarCompute) {
  */
 
 template<class T>
-T computeDotProduct(AutoGen::Vector3<T> &a) {
+T computeDotProduct(Vector3<T> &a) {
 	return a.dot(a);
 }
 
@@ -141,18 +140,18 @@ TEST(GenerateCodeAndLoadLib, DotProduct) {
 template <class S> using Matrix3 = Eigen::Matrix<S, 3, 3>;
 
 template<class T>
-T computeDotAndCrossNorm(const AutoGen::Vector3<T> &a, const AutoGen::Vector3<T> &b) {
+T computeDotAndCrossNorm(const Vector3<T> &a, const Vector3<T> &b) {
 	return a.dot(b) + a.cross(b).norm();
 }
 
-void computeGradientFD(const AutoGen::Vector3<double> &a, const AutoGen::Vector3<double> &b, AutoGen::Vector3<double> &grad) {
+void computeGradientFD(const Vector3<double> &a, const Vector3<double> &b, Vector3<double> &grad) {
 
 	double h = 1e-5;
 
 	for (int i = 0; i < 3; ++i) {
-		AutoGen::Vector3<double> ap = a;
+		Vector3<double> ap = a;
 		ap(i) += h;
-		AutoGen::Vector3<double> am = a;
+		Vector3<double> am = a;
 		am(i) -= h;
 
 		double ep = computeDotAndCrossNorm(ap, b);
@@ -231,19 +230,19 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
  */
 
 
-void computeHessianFD(const AutoGen::Vector3<double> &a, const AutoGen::Vector3<double> &b, Matrix3<double> &hess) {
+void computeHessianFD(const Vector3<double> &a, const Vector3<double> &b, Matrix3<double> &hess) {
 
 	double h = 1e-5;
 
 	for (int i = 0; i < 3; ++i) {
-		AutoGen::Vector3<double> ap = a;
+		Vector3<double> ap = a;
 		ap(i) += h;
-		AutoGen::Vector3<double> am = a;
+		Vector3<double> am = a;
 		am(i) -= h;
 
-		AutoGen::Vector3<double> gradp;
+		Vector3<double> gradp;
 		computeGradientFD(ap, b, gradp);
-		AutoGen::Vector3<double> gradm;
+		Vector3<double> gradm;
 		computeGradientFD(am, b, gradm);
 
 		for (int j = 0; j < 3; ++j) {
