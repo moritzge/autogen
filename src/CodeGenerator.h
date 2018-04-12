@@ -1201,10 +1201,6 @@ RecType<S> sqrt(const RecType<S> &other) {
 	return RecType<S>(Sp<const Node<S>>(new NodeSqrt<S>(other.getNode())));
 }
 
-double sqrt(const double &other) {
-	return std::sqrt(other);
-}
-
 template<class S>
 RecType<S> pow(const RecType<S> &a, const RecType<S> &b) {
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), b.getNode())));
@@ -1221,10 +1217,6 @@ RecType<S> pow(const RecType<S> &a, S b) {
 
 	Sp<const Node<S>> nodeB(new NodeConst<S>(b));
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), nodeB)));
-}
-
-double pow(const double &a, const double &b) {
-	return std::pow(a, b);
 }
 
 template<class S>
