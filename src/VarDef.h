@@ -6,19 +6,18 @@
 
 namespace AutoGen {
 
-template<class S>
-class VectorX;
+//template<class S>
+//class VectorX;
 
 template <class S, int N> using VectorXN = Eigen::Matrix<S, N, 1>;
 template <class S> using Vector3 = VectorXN<S, 3>;
 
 template<class S>
 class RecType;
+typedef RecType<double> R;
 
 typedef AutoDiff<double, double> AD;
 typedef AutoDiff<AD, AD> ADD;
-
-typedef RecType<double> R;
 
 typedef AutoDiff<R, R> ADR;
 typedef AutoDiff<ADR, ADR> ADDR;
@@ -56,7 +55,7 @@ class Vector3n : public VectorXn<S>
 {
 public:
 	Vector3n() : VectorXn<S>(3, "NoName") {}
-	Vector3n(const std::string &name) : VectorX<S>(3, name)
+	Vector3n(const std::string &name) : VectorXn<S>(3, name)
 	{
 	}
 };
@@ -74,7 +73,7 @@ public:
 	{
 	}
 
-	void assignSegment(int idx, int size, VectorX<S> &vars)
+	void assignSegment(int idx, int size, VectorXn<S> &vars)
 	{
 		for (int i = 0; i < size; i++)
 		{
