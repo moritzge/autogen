@@ -11,6 +11,9 @@ public:
 	AutoDiff() {
 	}
 
+//	AutoDiff() {
+//	}
+
 	template<class T>
 	AutoDiff(const T &c) : m_x((Value)c), m_d((Deriv)0)	{
 	}
@@ -108,9 +111,14 @@ public:
 		return type;
 	}
 
+	std::string getName() const {
+		return m_name;
+	}
+
 private:
 	Value m_x;			// value
 	Deriv m_d;			// derivative
+	std::string m_name;
 };
 
 template<class Value, class Deriv>

@@ -155,7 +155,7 @@ public:
 		mNodes = nodesNew2;
 	}
 
-	std::string generateCode() {
+	std::string generateCode(std::string functionName = "compute_from_code_generator") {
 
 		// update variable index
 		int counter = 0;
@@ -163,11 +163,27 @@ public:
 			mHashedNodes[mNodes[i]].second.setIndex(counter++);
 		}
 
-		// write code
+
+		// write declaration
+		std::string codeInVars;
+		std::string codeOutVars;
+		for (uint64_t hash : mNodes) {
+			const Node<S>* node = mHashedNodes[hash].first;
+			if(node->getNodeType() == NodeType::INPUT_NODE)
+				codeInVars += (codeInVars.empty()) ? "double "  : ", double " + node->getVarName();
+			else if(node->getNodeType() == NodeType::OUTPUT_NODE)
+				codeOutVars += (codeOutVars.empty()) ? "double &"  : ", double &" + node->getVarName();
+		}
+
 		std::string code;
+		code += "void " + functionName + "(" + codeInVars + ", " + codeOutVars + ")\n{\n";
+
+		// write code
 		for (size_t i = 0; i < mNodes.size(); ++i) {
 			code += mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
 		}
+
+		code += "}\n";
 
 		return code;
 	}

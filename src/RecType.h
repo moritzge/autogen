@@ -3,6 +3,7 @@
 #include "NodeTypes.h"
 
 #include <string>
+#include <vector>
 
 namespace AutoGen {
 
@@ -213,5 +214,23 @@ RecType<S> pow(const RecType<S> &a, S b) {
 	Sp<const Node<S>> nodeB(new NodeConst<S>(b));
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), nodeB)));
 }
+
+
+template<class S>
+class RecTypeVec
+{
+public:
+	RecTypeVec(const std::string &name, int size) : mName(name) {
+		mRecTypes.resize(size);
+	}
+
+	RecType<S> &operator[](int i) {
+		return mRecTypes[i];
+	}
+
+private:
+	std::shared_ptr<const Node<S>> mNode;
+	std::string mName;
+};
 
 } // namespace AutoGen

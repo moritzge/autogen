@@ -45,6 +45,11 @@ public:
 		return REGULAR_NODE;
 	}
 
+	virtual std::string getVarName() const {
+		throw std::logic_error("`getVarName()` should not be called on this node!");
+		return "";
+	}
+
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const = 0;
 
 	static uint64_t rol(uint64_t x, int d) {
