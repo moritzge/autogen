@@ -1,3 +1,4 @@
+#pragma once
 
 #include "VarDef.h"
 #include "RecType.h"

@@ -1,5 +1,4 @@
-#ifndef AUTO_DIFF_H
-#define AUTO_DIFF_H
+#pragma once
 
 #include <ostream>
 #include <cmath>
@@ -223,5 +222,3 @@ std::ostream& operator<<(std::ostream& stream, const AutoDiff<Value, Deriv> &s) 
 	stream << s.value() << "(" << s.deriv() << ")";
 	return stream;
 }
-
-#endif

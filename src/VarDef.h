@@ -1,3 +1,5 @@
+#pragma once
+
 #include "AutoDiff.h"
 
 #include <eigen3/Eigen/Eigen>
