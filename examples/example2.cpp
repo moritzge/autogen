@@ -1,7 +1,8 @@
 #include <iostream>
 #include <chrono>
 
-#include <CodeGenerator.h>
+#include <RecType.h>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 

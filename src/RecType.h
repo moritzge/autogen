@@ -221,15 +221,20 @@ class RecTypeVec
 {
 public:
 	RecTypeVec(const std::string &name, int size) : mName(name) {
-		mRecTypes.resize(size);
+		mRecVec.resize(size);
+		Sp<NodeVarVecBase<S>> nodeVecBase(new NodeVarVecBase<S>(mName));
+		for (int i = 0; i < size; ++i) {
+			Sp<NodeVarVecEl<S>> nodeEl(new NodeVarVecEl<S>(nodeVecBase, i));
+			mRecVec[i] = RecType<S>(nodeEl);
+		}
 	}
 
-	RecType<S> &operator[](int i) {
-		return mRecTypes[i];
+	const RecType<S> &operator[](int i) const {
+		return mRecVec[i];
 	}
 
 private:
-	std::shared_ptr<const Node<S>> mNode;
+	std::vector<RecType<S>> mRecVec;
 	std::string mName;
 };
 

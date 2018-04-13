@@ -104,4 +104,18 @@ public:
 
 };
 
+
+//template<class S, int N>
+//class VectorCG : public Eigen::Matrix<S, N, 1> {
+//public:
+//	VectorCG() : Eigen::Matrix<S, N, 1>() {}
+//	VectorCG(std::string varName) :
+
+//private:
+//		RecType
+//};
+
+//#define VECTORR(name) printer(#name, (name))
+
+
 } // namespace AutoGen

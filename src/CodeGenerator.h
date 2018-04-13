@@ -170,9 +170,9 @@ public:
 		for (uint64_t hash : mNodes) {
 			const Node<S>* node = mHashedNodes[hash].first;
 			if(node->getNodeType() == NodeType::INPUT_NODE)
-				codeInVars += (codeInVars.empty()) ? "double "  : ", double " + node->getVarName();
+				codeInVars += ((codeInVars.empty()) ? "" : ", ") + node->getVarType() + node->getVarName();
 			else if(node->getNodeType() == NodeType::OUTPUT_NODE)
-				codeOutVars += (codeOutVars.empty()) ? "double &"  : ", double &" + node->getVarName();
+				codeOutVars += ((codeOutVars.empty()) ? ""  : ", ") + node->getVarType() + node->getVarName();
 		}
 
 		std::string code;

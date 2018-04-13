@@ -1,7 +1,7 @@
 #include <iostream>
 #include <chrono>
 
-#include <CodeGenerator.h>
+#include <RecType.h>
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -33,49 +33,79 @@ double computeByHand(double a) {
 	return 2.*(a*a*a + 2.*a)*(3.*a*a + 2.);
 }
 
+void compute_from_code_generator(double *x, double &res)
+{
+;
+double v1 = x[0];
+double v2 = x[1];
+double v3 = v1 * v2;
+res = v3;
+}
+
 int main(int argc, char *argv[])
 {
-//	using namespace AutoGen;
+	using namespace AutoGen;
 
-//	typedef RecType<double> R;
+	typedef RecType<double> R;
 
-//	R a("a");
-//	R b("b");
+	if(0)
+	{
+		R a("a");
+		R b("b");
 
-//	R c = a*b;
+		R c = a*b;
 
-//	c.printCode();
-
-	std::cout << "# args:" << argc <<std::endl;
-
-	double a = atof(argv[1]);
-
-	std::cout << "a: " << a << std::endl;
-
-	int n = 1e9;
-
-	auto t1 = Clock::now();
-	double sum = 0;
-	for (int i = 0; i < n; ++i) {
-		sum += computeCG(a);
+		std::cout << c.generateCode() << std::endl;
 	}
-	std::cout << "sum = " << sum << std::endl;
 
-	auto t2 = Clock::now();
-	sum = 0;
-	for (int i = 0; i < n; ++i) {
-		sum += computeByHand(a);
+	{
+		typedef RecTypeVec<double> Rv;
+
+		Eigen::Matrix<R, 2, 1> x;
+		Rv v("x", 2);
+//		v[0]
+		R c = v[0]*v[1];
+
+		std::cout << c.generateCode() << std::endl;
 	}
-	std::cout << "sum = " << sum << std::endl;
 
-	auto t3 = Clock::now();
+	Eigen::Vector2d x;
+	x << 1.2, 2.3;
+	double res;
+	compute_from_code_generator(x.data(), res);
 
-	std::cout << "Delta t2-t1: "
-			  << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-			  << " milliseconds" << std::endl;
-	std::cout << "Delta t3-t2: "
-			  << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
-			  << " milliseconds" << std::endl;
+	std::cout << res << std::endl;
+
+//	std::cout << "# args:" << argc <<std::endl;
+
+//	double a = atof(argv[1]);
+
+//	std::cout << "a: " << a << std::endl;
+
+//	int n = 1e9;
+
+//	auto t1 = Clock::now();
+//	double sum = 0;
+//	for (int i = 0; i < n; ++i) {
+//		sum += computeCG(a);
+//	}
+//	std::cout << "sum = " << sum << std::endl;
+
+//	auto t2 = Clock::now();
+//	sum = 0;
+//	for (int i = 0; i < n; ++i) {
+//		sum += computeByHand(a);
+//	}
+//	std::cout << "sum = " << sum << std::endl;
+
+//	auto t3 = Clock::now();
+
+//	std::cout << "Delta t2-t1: "
+//			  << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+//			  << " milliseconds" << std::endl;
+//	std::cout << "Delta t3-t2: "
+//			  << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
+//			  << " milliseconds" << std::endl;
 
 	return 0;
 }

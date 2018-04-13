@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Node.h"
+#include "CodeGenerator.h"
 
 #include <cassert>
 #include <vector>
@@ -87,6 +88,10 @@ public:
 		return mVarName;
 	}
 
+	virtual std::string getVarType() const {
+		return "double &";
+	}
+
 	virtual uint64_t computeHash() const {
 		std::hash<std::string> hashS;
 		return hashS(mVarName);
@@ -98,10 +103,29 @@ private:
 };
 
 template<class S>
+class NodeVarVecBase : public NodeVar<S>
+{
+public:
+	 NodeVarVecBase(const std::string &varName)
+		: NodeVar<S>(varName) {
+		this->init();
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return "";
+	}
+
+	virtual std::string getVarType() const {
+		return "double *";
+	}
+
+};
+
+template<class S>
 class NodeVarVecEl : public Node<S>
 {
 public:
-	NodeVarVecEl (Sp<const NodeVar<S>> node, int index)
+	NodeVarVecEl (Sp<const NodeVarVecBase<S>> node, int index)
 		: mNode(node), mIndex(index) {
 		this->init();
 	}
@@ -124,81 +148,22 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName()
-				+ " = " + generator.getVar(mNode.get()) + "[" + std::to_string(mIndex) + "]";
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + mNode->getVarName() + "[" + std::to_string(mIndex) + "]";
 	}
 
-	virtual NodeType getNodeType() const {
-		return NodeType::INPUT_NODE;
-	}
+	virtual uint64_t getHashId() const { return 13; }
 
 	virtual uint64_t computeHash() const {
-		return this->rol(mNode->getHash(), 3) + mIndex;
+		return this->rol(mNode->getHash(), 3) + getHashId() + mIndex;
+		// TODO: bad hash, because high probability that:
+		//                          getHashId()+mIndex==other.getHashId()
 	}
 
 private:
-	Sp<const NodeVar<S>> mNode; // this is the node that this node is an element of
-	int mIndex;					// index of this element in the vector
+	Sp<const NodeVarVecBase<S>> mNode;	// this is the node that this node is an element of
+	int mIndex;							// index of this element in the vector
 
 };
-
-//template<class S>
-//class NodeVarVec : public Node<S>
-//{
-//public:
-//	NodeVarVec (const std::string &varName, int size)
-//		: mVarName(varName) {
-//		mNodes.resize(size);
-//		this->init();
-//	}
-
-//	virtual size_t getNumChildren() const {
-//		return mNodes.size();
-//	}
-
-//	virtual Sp<const Node<S>> getChild(size_t i) const {
-//		throw std::logic_error("NodeVar does not have any children");
-//	}
-
-
-//	virtual S evaluate() const {
-//		throw std::logic_error("cannot evaluate a variable name");
-//		return 0;
-//	}
-
-//	virtual bool evaluate(S &value) const {
-//		return false;
-//	}
-
-//	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-//		std::string code;
-//		for (int i = 0; i < mNodes; ++i) {
-//			code += generator.getVarTypeName() + " " + mNodes[] + " = " + + generator.getVar(this).getVarName() + "[" + std::to_string(i) + "];\n";
-//		}
-//		return code;
-//	}
-
-//	virtual NodeType getNodeType() const {
-//		return NodeType::INPUT_NODE;
-//	}
-
-//	virtual std::string getVarName() const {
-//		return mVarName;
-//	}
-
-//	virtual uint64_t computeHash() const {
-//		std::hash<std::string> hashS;
-//		return hashS(mVarName);
-//	}
-
-//	void setNode(int i, Sp<const Node<S>> node) {
-//		mNodes[i] = node;
-//	}
-
-//private:
-//	std::string mVarName;
-//	std::vector<Sp<const Node<S>>> mNodes;
-//};
 
 template<class S>
 class NodeResult : public Node<S>
@@ -237,6 +202,10 @@ public:
 
 	virtual std::string getVarName() const {
 		return mResVarName;
+	}
+
+	virtual std::string getVarType() const {
+		return "double &";
 	}
 
 	virtual uint64_t computeHash() const {
