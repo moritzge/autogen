@@ -306,8 +306,6 @@ TEST(GenerateCodeAndLoadLib, GradientAndHessian) {
 	std::string libCode = "#include <cmath>\nextern \"C\" \n";
 	libCode += code;
 
-	std::cout << libCode << std::endl;
-
 	// make and load library
 	std::string error;
 	compute_extern2* compute_CG;
