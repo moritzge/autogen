@@ -33,6 +33,10 @@ namespace AutoGen {
 //                            in     out
 typedef void compute_extern(double*,double*);
 
+// general function for code generator that is loaded during runtime
+//                            in     out
+typedef void compute_extern2(double*,double*,double*);
+
 bool buildLibrary(const std::string &code, const std::string &libName, std::string &error) {
 
 	// make dir
@@ -106,14 +110,14 @@ std::string getPseudoUniqueLibName(std::string name = "") {
 }
 
 template<class F>
-bool buildAndLoad(const std::string &code, F* (&fnc), const std::string &name, std::string &error) {
+bool buildAndLoad(const std::string &code, F* (&fnc), const std::string &name, const std::string &fncname, std::string &error) {
 
 	std::string libName = getPseudoUniqueLibName(name);
 
 	if(!buildLibrary(code, libName, error))
 		return false;
 
-	if(!loadLibrary(libName, fnc))
+	if(!loadLibrary(libName, fnc, fncname))
 		return false;
 
 	return true;
@@ -121,7 +125,7 @@ bool buildAndLoad(const std::string &code, F* (&fnc), const std::string &name, s
 
 template<class F>
 bool buildAndLoad(const std::string &code, F* (&fnc), std::string &error) {
-	return buildAndLoad(code, fnc, "", error);
+	return buildAndLoad(code, fnc, "", "compute_extern", error);
 }
 
 }

@@ -78,7 +78,7 @@ TEST(GenerateCodeAndLoadLib, ScalarCompute) {
 	// build and load library
 	std::string error;
 	compute_extern* compute_y;
-	EXPECT_TRUE(buildAndLoad(libCode, compute_y, "compute_y", error));
+	EXPECT_TRUE(buildAndLoad(libCode, compute_y, "compute_y", "compute_extern", error));
 
 	// test it!
 	{
@@ -123,7 +123,7 @@ TEST(GenerateCodeAndLoadLib, DotProduct) {
 	// build and load library
 	std::string error;
 	compute_extern* compute;
-	EXPECT_TRUE(buildAndLoad(libCode, compute, "computeDotProduct", error));
+	EXPECT_TRUE(buildAndLoad(libCode, compute, "computeDotProduct", "compute_extern", error));
 
 	// test it!
 	{
@@ -196,7 +196,7 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 	// make and load library
 	std::string error;
 	compute_extern* compute_CG;
-	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_grad", error));
+	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_grad", "compute_extern", error));
 
 	// test it!
 	{
@@ -251,101 +251,92 @@ void computeHessianFD(const Vector3<double> &a, const Vector3<double> &b, Matrix
 	}
 }
 
-//TEST(GenerateCodeAndLoadLib, GradientAndHessian) {
-//	using namespace AutoGen;
-//	typedef RecType<double> R;
-//	typedef AutoDiff<R, R> ADR;
-//	typedef AutoDiff<ADR, ADR> ADDR;
+TEST(GenerateCodeAndLoadLib, GradientAndHessian) {
+	using namespace AutoGen;
+	typedef RecType<double> R;
+	typedef AutoDiff<R, R> ADR;
+	typedef AutoDiff<ADR, ADR> ADDR;
 
-//	// record computation
-//	RecTypeVec<double> x("x", 6);
+	// record computation
+	RecTypeVec<double> x("x", 6);
 
-//	CodeGenerator<double> generator;
+	CodeGenerator<double> generator;
 
-//	// compute gradient and add to code gen
-//	{
-//		Vector3<ADR> a; a << x[0], x[1], x[2];
-//		Vector3<ADR> b; b << x[3], x[4], x[5];
+	// compute gradient and add to code gen
+	{
+		Vector3<ADR> a; a << x[0], x[1], x[2];
+		Vector3<ADR> b; b << x[3], x[4], x[5];
 
-//		Eigen::Matrix<RecType<double>, 1, -1> grad(3);
-//		for (int i = 0; i < 3; ++i) {
-//			a(i).deriv() = 1.0;
-//			ADR y = computeDotAndCrossNorm(a, b);
-//			grad(i) = y.deriv();
-//			a(i).deriv() = 0.0;
-//		}
+		Eigen::Matrix<RecType<double>, 1, -1> grad(3);
+		for (int i = 0; i < 3; ++i) {
+			a(i).deriv() = 1.0;
+			ADR y = computeDotAndCrossNorm(a, b);
+			grad(i) = y.deriv();
+			a(i).deriv() = 0.0;
+		}
 
-//		addToGeneratorAsResult(grad, generator, "y");
-//	}
+		addToGeneratorAsResult(grad, generator, "y");
+	}
 
-//	//compute hessian and add to code gen
-//	{
-//		Vector3<ADDR> a; a << x[0], x[1], x[2];
-//		Vector3<ADDR> b; b << x[3], x[4], x[5];
+	//compute hessian and add to code gen
+	{
+		Vector3<ADDR> a; a << x[0], x[1], x[2];
+		Vector3<ADDR> b; b << x[3], x[4], x[5];
 
-//		Matrix3<R> hess;
-//		for (int i = 0; i < 3; ++i) {
-//			a(i).deriv() = 1.0;
-//			for (int j = 0; j < 3; ++j) {
-//				a(j).value().deriv() = 1.0;
-//				ADDR y = computeDotAndCrossNorm(a, b);
-//				hess(i,j) = y.deriv().deriv();
-//				a(j).value().deriv() = 0.0;
-//			}
-//			a(i).deriv() = 0.0;
-//		}
+		Matrix3<R> hess;
+		for (int i = 0; i < 3; ++i) {
+			a(i).deriv() = 1.0;
+			for (int j = 0; j < 3; ++j) {
+				a(j).value().deriv() = 1.0;
+				ADDR y = computeDotAndCrossNorm(a, b);
+				hess(i,j) = y.deriv().deriv();
+				a(j).value().deriv() = 0.0;
+			}
+			a(i).deriv() = 0.0;
+		}
 
-//		for (int i = 0; i < 3; ++i) {
-//			for (int j = 0; j < 3; ++j)
-//				hess(i,j).addToGeneratorAsResult(generator, "y[" + std::to_string(3+3*i+j) + "]");
-//		}
-//	}
+		addToGeneratorAsResult(hess, generator, "z");
+	}
 
 
-//	generator.sortNodes();
-//	std::string code = generator.generateCode();
+	generator.sortNodes();
+	std::string code = generator.generateCode("compute_extern2");
 
-//	// and wrap it in a function
-//	std::string libCode = "#include <cmath>\nextern \"C\" void compute_extern(double* x, double* y) {\n;\n";
-//	libCode += code;
-//	libCode += "}\n";
+	// and wrap it in a function
+	std::string libCode = "#include <cmath>\nextern \"C\" \n";
+	libCode += code;
 
-//	// make and load library
-//	std::string error;
-//	compute_extern* compute_CG;
-//	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_gradAndHess", error));
+	std::cout << libCode << std::endl;
 
-//	// test it!
-//	{
-//		Vector3<double> a;
-//		a << 1.2, 3.4, 5.5;
-//		Vector3<double> b;
-//		b << 4.2, -0.1, 1.8;
-//		double x[6];
-//		for (int i = 0; i < 3; ++i) {
-//			x[i] = a(i);
-//			x[3+i] = b(i);
-//		}
+	// make and load library
+	std::string error;
+	compute_extern2* compute_CG;
+	EXPECT_TRUE(buildAndLoad(libCode, compute_CG, "compute_gradAndHess", "compute_extern2", error));
 
-//		// compute with CG
-//		double y[12];
-//		compute_CG(x, y);
-//		Vector3<double> grad_CG;
-//		for (int i = 0; i < 3; ++i) {
-//			grad_CG(i) = y[i];
-//		}
-//		Matrix3<double> hess_CG;
-//		for (int i = 0; i < 9; ++i) {
-//			hess_CG.data()[i] = y[3+i];
-//		}
+	// test it!
+	{
+		Vector3<double> a;
+		a << 1.2, 3.4, 5.5;
+		Vector3<double> b;
+		b << 4.2, -0.1, 1.8;
+		double x[6];
+		for (int i = 0; i < 3; ++i) {
+			x[i] = a(i);
+			x[3+i] = b(i);
+		}
 
-//		// compute with FD
-//		Vector3<double> grad_FD;
-//		computeGradientFD(a, b, grad_FD);
-//		Matrix3<double> hess_FD;
-//		computeHessianFD(a, b, hess_FD);
+		// compute with CG
+		Vector3<double> grad_CG;
+		Matrix3<double> hess_CG;
+		compute_CG(x, grad_CG.data(), hess_CG.data());
 
-//		EXPECT_NEAR(grad_CG.norm(), grad_FD.norm(), 1e-5);
-//		EXPECT_NEAR(hess_CG.norm(), hess_FD.norm(), 1e-3);
-//	}
-//}
+		// compute with FD
+		Vector3<double> grad_FD;
+		computeGradientFD(a, b, grad_FD);
+		Matrix3<double> hess_FD;
+		computeHessianFD(a, b, hess_FD);
+
+		EXPECT_NEAR(grad_CG.norm(), grad_FD.norm(), 1e-5);
+		EXPECT_NEAR(hess_CG.norm(), hess_FD.norm(), 1e-3);
+	}
+}

@@ -229,11 +229,11 @@ public:
 	}
 
 	virtual S evaluate() const {
-		throw std::logic_error("shouldn't be get here");
+		throw std::logic_error("shouldn't get here");
 	}
 
 	virtual bool evaluate(S &value) const {
-		throw std::logic_error("shouldn't be get here");
+		throw std::logic_error("shouldn't get here");
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
@@ -268,6 +268,70 @@ public:
 
 private:
 	std::string mVarName;
+	std::vector<Sp<const Node<S>>> mNodes;
+};
+
+template<class S>
+class NodeOutMat : public Node<S>
+{
+public:
+	NodeOutMat (const std::string &varName, int numRows, int numCols)
+		: mVarName(varName), mNumRows(numRows), mNumCols(numCols) {
+		this->init();
+		mNodes.resize(numRows*numCols);
+	}
+
+	virtual size_t getNumChildren() const {
+		return mNodes.size();
+	}
+
+	virtual Sp<const Node<S>> getChild(size_t i) const {
+		return mNodes[i];
+	}
+
+	virtual S evaluate() const {
+		throw std::logic_error("shouldn't get here");
+	}
+
+	virtual bool evaluate(S &value) const {
+		throw std::logic_error("shouldn't get here");
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		std::string code;
+		for (int i = 0; i < mNumRows; ++i) {
+			for (int j = 0; j < mNumCols; ++j) {
+				code += mVarName + "[" + std::to_string(i*mNumCols+j) + "] = "
+					+ generator.getVar(mNodes[i*mNumCols + j].get()).getVarName() + ";\n";
+			}
+		}
+		return code;
+	}
+
+	virtual NodeType getNodeType() const {
+		return NodeType::OUTPUT_NODE;
+	}
+
+	virtual std::string getVarName() const {
+		return mVarName;
+	}
+
+	virtual std::string getVarType() const {
+		return "double *";
+	}
+
+	virtual uint64_t computeHash() const {
+		std::hash<std::string> hashS;
+		return hashS(mVarName);
+	}
+
+	void setElement(int i, Sp<const Node<S>> node) {
+		mNodes[i] = node;
+	}
+
+private:
+	std::string mVarName;
+	int mNumRows, mNumCols;
 	std::vector<Sp<const Node<S>>> mNodes;
 };
 

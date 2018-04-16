@@ -250,4 +250,18 @@ void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, -1> &v, CodeGener
 	generator.collectNodes(nodeOutVec);
 }
 
+template<int N, int M, class S>
+void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, M> &mat, CodeGenerator<S> &generator, const std::string &varName) {
+
+	NodeOutMat<S>* nodeOutMat = new NodeOutMat<S>(varName, mat.rows(), mat.cols());
+
+	for (int i = 0; i < mat.rows(); ++i) {
+		for (int j = 0; j < mat.cols(); ++j) {
+			nodeOutMat->setElement(i*mat.cols() + j, mat(i,j).getNode());
+		}
+	}
+
+	generator.collectNodes(nodeOutMat);
+}
+
 } // namespace AutoGen
