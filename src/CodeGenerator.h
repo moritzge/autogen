@@ -104,7 +104,7 @@ public:
 				}
 			}
 			else {
-//				std::cout << "node already in!\n";
+//				std::cout << "node already in! " << nodeVisiting->getHash() << "\n";
 			}
 
 			// let's go to next node

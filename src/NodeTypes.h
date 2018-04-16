@@ -121,6 +121,13 @@ public:
 
 };
 
+unsigned int hashInt(unsigned int x) {
+	x = ((x >> 16) ^ x) * 0x45d9f3b;
+	x = ((x >> 16) ^ x) * 0x45d9f3b;
+	x = (x >> 16) ^ x;
+	return x;
+}
+
 template<class S>
 class NodeVarVecEl : public Node<S>
 {
@@ -154,7 +161,7 @@ public:
 	virtual uint64_t getHashId() const { return 13; }
 
 	virtual uint64_t computeHash() const {
-		return this->rol(mNode->getHash(), 3) + getHashId() + mIndex;
+		return this->rol(this->mNode->getHash(), 3) + getHashId() + hashInt(mIndex);
 		// TODO: bad hash, because high probability that:
 		//                          getHashId()+mIndex==other.getHashId()
 	}
