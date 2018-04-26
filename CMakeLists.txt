@@ -34,7 +34,9 @@ find_package(Eigen3 REQUIRED)
 add_subdirectory(src)
 
 # Tests
-set(AUTOGEN_BUILD_TESTS TRUE CACHE BOOL "Build AutoGen tests")
+if(NOT AUTOGEN_BUILD_TESTS)
+	set(AUTOGEN_BUILD_TESTS TRUE CACHE BOOL "Build AutoGen tests")
+endif()
 message(STATUS "Building AutoGen Tests: ${AUTOGEN_BUILD_TESTS}")
 if (AUTOGEN_BUILD_TESTS)
 	enable_testing()
