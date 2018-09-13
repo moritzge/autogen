@@ -2,6 +2,9 @@
 
 #include <memory>
 #include <algorithm>
+#include <string>
+#include <sstream>
+#include <iostream>
 
 namespace AutoGen {
 

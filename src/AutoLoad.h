@@ -53,7 +53,7 @@ bool buildLibrary(const std::string &code, const std::string &libName, std::stri
 
 #if defined(__clang__)
 	std::cout << "Using `clang++` to compile '" << libName << "'." << std::endl;
-	std::string compile_cmd = "clang++ -fPIC -shared -o "+libName+"/lib"+libName+".so "+libName+"/"+libName+".cpp";
+	std::string compile_cmd = "clang++ -fPIC -std=c++14 -shared -o "+libName+"/lib"+libName+".so "+libName+"/"+libName+".cpp";
 #elif defined(__GNUC__) || defined(__GNUG__)
 	std::cout << "Using `g++` to compile '" << libName << "'." << std::endl;
 	std::string compile_cmd = "g++ -fPIC -I" AUTOGEN_SRC_DIR " -shared -o "+libName+"/lib"+libName+".so "+libName+"/"+libName+".cpp";
@@ -64,6 +64,7 @@ bool buildLibrary(const std::string &code, const std::string &libName, std::stri
 	cmakeFile <<
 				 "cmake_minimum_required(VERSION 3.5 FATAL_ERROR)\n"
 				 "project(" << libName << ")\n"
+				 "include_directories(" AUTOGEN_SRC_DIR ")\n"
 				 "file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.cpp)\n"
 				 "add_library(${PROJECT_NAME} SHARED ${sources})";
 	cmakeFile.close();

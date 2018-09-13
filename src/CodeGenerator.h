@@ -3,14 +3,14 @@
 #include "Node.h"
 
 #include <iostream>
+#include <ostream>
+#include <fstream>
+
 #include <memory>
 #include <map>
 #include <string>
 #include <vector>
 
-#include <ostream>
-#include <iostream>
-#include <fstream>
 #include <typeinfo>
 // #include <experimental/filesystem>
 #include <cmath>
