@@ -7,7 +7,7 @@ project(AutoGenLib CXX)
 add_definitions(-DCXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID})
 
 # add source files
-file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_library(${PROJECT_NAME} STATIC ${sources})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)

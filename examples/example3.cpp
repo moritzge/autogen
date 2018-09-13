@@ -4,6 +4,7 @@
 
 #include <CodeGenerator.h>
 #include <AutoDiff.h>
+#include <RecType.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 

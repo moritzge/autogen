@@ -14,6 +14,6 @@ int exec(const std::string &cmd, std::string &out) {
 		if (fgets(buffer.data(), 128, pipe) != nullptr)
 			out += buffer.data();
 	}
-	int res = WEXITSTATUS(pclose(pipe));
-	return res;
+	int res = pclose(pipe);
+	return WEXITSTATUS(res);
 }

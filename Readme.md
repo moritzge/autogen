@@ -4,6 +4,10 @@
 
 ## Build
 
+### Thirdparty
+
+To build the tests, install [Gtest](https://github.com/google/googletest).
+
 ```
 mkdir build && cd build
 cmake ..
