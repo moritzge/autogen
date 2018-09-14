@@ -11,6 +11,12 @@ function(add_cpp_as_exe CPP_FILE_NAME)
 	set_target_properties(${CPP_FILE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 	target_link_libraries(${CPP_FILE_NAME} AutoGenLib)
 	target_include_directories(${CPP_FILE_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
+
+	add_custom_target(${CPP_FILE_NAME}-run
+        COMMAND ${CPP_FILE_NAME}
+        DEPENDS ${CPP_FILE_NAME}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endfunction(add_cpp_as_exe)
 
 # example1
@@ -21,3 +27,4 @@ endfunction(add_cpp_as_exe)
 # add_cpp_as_exe(example5)
 add_cpp_as_exe(example_autodiff)
 add_cpp_as_exe(example_codegen)
+add_cpp_as_exe(example_codegen_easy)

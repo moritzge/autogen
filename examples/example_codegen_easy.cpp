@@ -8,13 +8,15 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 
-/* CodeGen example
- * ================
+/* CodeGen example easy
+ * ====================
  *
  * This example shows how to use CodeGen to generate code of a function.
  * It also shows how to combine AutoDiff and CodeGen to get code for
  * the gradient and hessian.
  *
+ * This example is called 'easy', because we first write helper functions
+ * that make generating the gradient and hessian much easier.
  */
 
 // some template typedefs for convenience
@@ -75,29 +77,76 @@ public:
 	}
 };
 
+////template<typename T>
+//class my_function
+//{
+//  double operator()(/*const Vector<double> &x*/)
+//  {
+////	  Vector3<double> a = x.template segment<3>(0);
+////	  Vector3<double> b = x.template segment<3>(3);
 
+////	  return a.cross(b).norm();
+//	  return 0.1;
+//  }
+//};
 
-// This is the function we want to generate code from
-template<class T>
-T my_function(Vector<T> &x) {
-	Vector3<T> a = x.template segment<3>(0);
-	Vector3<T> b = x.template segment<3>(3);
+//template<class func>
+//class EasyGen
+//{
+//public:
+//	std::string generate(const Vector<double> &x) {
+////		Vector<double> xx("x", x.size());
 
-	return a.cross(b).norm();
+//		double f = func();
+
+////		AutoGen::CodeGenerator<double> generator;
+////		return f.generateCode("my_function");
+//	}
+//};
+
+template<typename T>
+int f(T v)
+{
+  std::cout << "Called" << std::endl;
+  return 0; // just do something for example
 }
+
+template<typename T, template<typename> class func>
+struct C
+{
+  int generateCode()
+  {
+	return func<T>(3);
+  }
+};
+
+template <class T>
+struct FuncAdapt
+{
+  T x_;
+  template <class U>
+  FuncAdapt( U x ) : x_( x ) {}
+
+  operator int() const
+  {
+	return f<T>( x_ );
+  }
+};
 
 int main(int argc, char *argv[])
 {
 	// generate code for the evaluation of my_function
 	{
-		Vector<R> x("x", 6);
+//		Vector<double> x(6);
+//		EasyGen<my_function> gen;
+//		std::cout << gen.generate(x) << std::endl;
 
-		R f = my_function(x);
+		C<float,FuncAdapt > c;
+		c.generateCode();
 
-		AutoGen::CodeGenerator<double> generator;
-		std::cout << f.generateCode("my_function") << std::endl;
 	}
 
+#if 0
 	// generate code for the evaluation of gradient of my_function
 	{
 		Vector<AD<R>> x("x", 6);
@@ -178,6 +227,6 @@ int main(int argc, char *argv[])
 		generator.sortNodes();
 		std::cout << generator.generateCode("my_function_gradient_hessian") << std::endl;
 	}
-
+#endif
 	return 0;
 }
