@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 
 		R f = my_function(x);
 
-		AutoGen::CodeGenerator<double> generator;
+		AutoGen::CodeGenerator generator;
 		std::cout << f.generateCode("my_function") << std::endl;
 	}
 
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 			x[i].deriv() = 0;
 		}
 
-		AutoGen::CodeGenerator<double> generator;
+		AutoGen::CodeGenerator generator;
 		AutoGen::addToGeneratorAsResult(gradient, generator, "gradient");
 
 		generator.sortNodes();
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 			x[i].deriv() = 0;
 		}
 
-		AutoGen::CodeGenerator<double> generator;
+		AutoGen::CodeGenerator generator;
 		AutoGen::addToGeneratorAsResult(hessian, generator, "hessian");
 
 		generator.sortNodes();
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
 	// generate code for the evaluation of gradient of my_function
 	{
-		AutoGen::CodeGenerator<double> generator;
+		AutoGen::CodeGenerator generator;
 
 		{
 			Vector<R> x("x", 6);

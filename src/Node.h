@@ -10,26 +10,18 @@ namespace AutoGen {
 
 template <class T> using Sp = std::shared_ptr<T>;
 
-template<class S> class CodeGenerator;
+class CodeGenerator;
 
 enum NodeType { REGULAR_NODE, INPUT_NODE, OUTPUT_NODE };
 
-template<class S>
-class Node
+class NodeBase
 {
 public:
-
-	Node() {
-	}
+	NodeBase() {}
 
 	virtual size_t getNumChildren() const = 0;
 
-	virtual Sp<const Node<S>> getChild(size_t i) const = 0;
-
-	// Return the evaluated value of this node
-	virtual S evaluate() const = 0;
-
-	virtual bool evaluate(S &value) const = 0;
+	virtual Sp<const NodeBase> getChild(size_t i) const = 0;
 
 	virtual uint64_t getHash() const {
 		if (!mIsHashValid)
@@ -58,7 +50,7 @@ public:
 		return "";
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const = 0;
+	virtual std::string generateCode(const CodeGenerator &generator) const = 0;
 
 	static uint64_t rol(uint64_t x, int d) {
 		return (x << d) | (x >> (64-d));
@@ -80,4 +72,20 @@ protected:
 	mutable bool mIsHashValid = false;
 	mutable uint64_t mCachedHash;
 };
+
+template<class S>
+class Node : public NodeBase
+{
+public:
+
+	Node() {
+	}
+
+	// Return the evaluated value of this node
+	virtual S evaluate() const = 0;
+
+	virtual bool evaluate(S &value) const = 0;
+
+};
+
 }

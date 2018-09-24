@@ -66,7 +66,7 @@ TEST(GenerateCodeAndLoadLib, ScalarCompute) {
 	y[0] = computeScalar(x[0]);
 
 	// generate the code
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	addToGeneratorAsResult(y, generator, "y");
 
 	generator.sortNodes();
@@ -112,7 +112,7 @@ TEST(GenerateCodeAndLoadLib, DotProduct) {
 	y[0] = computeDotProduct(xv);
 
 	// generate the code
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	addToGeneratorAsResult(y, generator, "y");
 	generator.sortNodes();
 	std::string code = generator.generateCode("compute_extern");
@@ -185,7 +185,7 @@ TEST(GenerateCodeAndLoadLib, Gradient) {
 	}
 
 	// generate the code
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	addToGeneratorAsResult(grad, generator, "y");
 	generator.sortNodes();
 	std::string code = generator.generateCode("compute_extern");
@@ -260,7 +260,7 @@ TEST(GenerateCodeAndLoadLib, GradientAndHessian) {
 	// record computation
 	RecTypeVec<double> x("x", 6);
 
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 
 	// compute gradient and add to code gen
 	{

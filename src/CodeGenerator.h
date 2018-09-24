@@ -44,13 +44,12 @@ private:
 	int mVarIndex;
 };
 
-template<class S>
 class CodeGenerator
 {
 public:
 	CodeGenerator() {}
 
-	void addNode(const Node<S>* node) {
+	void addNode(const NodeBase* node) {
 
 		// check if we have the same hashed node already
 		uint64_t hash = node->getHash();
@@ -60,7 +59,7 @@ public:
 		mHashedNodes[hash] = std::make_pair(node, VarDef());
 	}
 
-	const VarDef& getVar(const Node<S>* node) const {
+	const VarDef& getVar(const NodeBase* node) const {
 		assert(node);
 
 		uint64_t h = node->getHash();
@@ -71,7 +70,7 @@ public:
 
 	const std::string &getVarTypeName() const { return mVarTypeName; }
 
-	const Node<S>* getHashedNode(uint64_t nodeHash) const {
+	const NodeBase* getHashedNode(uint64_t nodeHash) const {
 		auto it = mHashedNodes.find(nodeHash);
 		if(it != mHashedNodes.end())
 			return it->second.first;
@@ -79,22 +78,22 @@ public:
 			return nullptr;
 	}
 
-	const Node<S>* getHashedNode(const Node<S>* node) const {
+	const NodeBase* getHashedNode(const NodeBase* node) const {
 		return getHashedNode(node->getHash());
 	}
 
-	void collectNodes(const Node<S>* rootNode) {
+	void collectNodes(const NodeBase* rootNode) {
 
 		// this is where we store all nodes that we still need to visit
-		std::vector<const Node<S>*> nodesToVisit;
+		std::vector<const NodeBase*> nodesToVisit;
 
 		// node we are currently visiting
-		const Node<S>* nodeVisiting = rootNode;
+		const NodeBase* nodeVisiting = rootNode;
 
 		// go through graph and visit nodes
 		while (true) {
 			// does the generator already have a same-hashed node?
-			const Node<S>* hashedNode = getHashedNode(nodeVisiting);
+			const NodeBase* hashedNode = getHashedNode(nodeVisiting);
 			// if not, let's add it and remember to visit children
 			if(hashedNode == nullptr) {
 
@@ -121,7 +120,7 @@ public:
 //		for (auto h : mNodes) {
 		for (size_t i = 0; i < mNodes.size(); ++i) {
 			uint64_t h = mNodes[i];
-			const Node<S>* node = mHashedNodes[h].first;
+			const NodeBase* node = mHashedNodes[h].first;
 			assert(node != nullptr);
 			addChildrenTo(node, nodesNew);
 		}
@@ -130,7 +129,7 @@ public:
 		std::vector<int> nodesIn, nodesOut;
 		for (size_t i = 0; i < nodesNew.size(); ++i) {
 			uint64_t h = nodesNew[i];
-			const Node<S>* node = mHashedNodes[h].first;
+			const NodeBase* node = mHashedNodes[h].first;
 			if(node->getNodeType() == INPUT_NODE) nodesIn.push_back(i);
 			else if(node->getNodeType() == OUTPUT_NODE) nodesOut.push_back(i);
 		}
@@ -168,7 +167,7 @@ public:
 		std::string codeInVars;
 		std::string codeOutVars;
 		for (uint64_t hash : mNodes) {
-			const Node<S>* node = mHashedNodes[hash].first;
+			const NodeBase* node = mHashedNodes[hash].first;
 			if(node->getNodeType() == NodeType::INPUT_NODE)
 				codeInVars += ((codeInVars.empty()) ? "" : ", ") + node->getVarType() + node->getVarName();
 			else if(node->getNodeType() == NodeType::OUTPUT_NODE)
@@ -189,7 +188,7 @@ public:
 	}
 
 private:
-	void addChildrenTo(const Node<S>* node, std::vector<uint64_t> &nodesNew) const {
+	void addChildrenTo(const NodeBase* node, std::vector<uint64_t> &nodesNew) const {
 		// is this node already in the new list?
 		uint64_t h = node->getHash();
 		if(std::find(nodesNew.begin(), nodesNew.end(), h) == nodesNew.end()) {
@@ -205,7 +204,7 @@ private:
 private:
 	std::string mVarTypeName = "double";
 	std::vector<uint64_t> mNodes;
-	std::map<uint64_t, std::pair<const Node<S>*, VarDef>> mHashedNodes;
+	std::map<uint64_t, std::pair<const NodeBase*, VarDef>> mHashedNodes;
 };
 
 }  // namespace AutoGen

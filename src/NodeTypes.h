@@ -21,7 +21,7 @@ public:
 		return 0;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		throw std::logic_error("NodeConst does not have any children");
 	}
 
@@ -35,7 +35,7 @@ public:
 		return true;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + std::to_string(mValue);
 	}
 
@@ -62,7 +62,7 @@ public:
 		return 0;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		throw std::logic_error("NodeVar does not have any children");
 	}
 
@@ -76,7 +76,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + mVarName;
 	}
 
@@ -111,7 +111,7 @@ public:
 		this->init();
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return "";
 	}
 
@@ -141,7 +141,7 @@ public:
 		return 1;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		assert(i == 0);
 		return mNode;
 	}
@@ -154,7 +154,7 @@ public:
 		return mNode->evaluate(value);
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + mNode->getVarName() + "[" + std::to_string(mIndex) + "]";
 	}
 
@@ -184,12 +184,12 @@ public:
 		return 1;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		assert(i == 0);
 		return mNode;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return this->mVarName + " = " + generator.getVar(mNode.get()).getVarName();
 	}
 
@@ -224,7 +224,7 @@ public:
 		return mNodes.size();
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		return mNodes[i];
 	}
 
@@ -236,7 +236,7 @@ public:
 		throw std::logic_error("shouldn't get here");
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		std::string code;
 		for (int i = 0; i < mNodes.size(); ++i) {
 			code += mVarName + "[" + std::to_string(i) + "] = "
@@ -285,7 +285,7 @@ public:
 		return mNodes.size();
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		return mNodes[i];
 	}
 
@@ -297,7 +297,7 @@ public:
 		throw std::logic_error("shouldn't get here");
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		std::string code;
 		for (int i = 0; i < mNumRows; ++i) {
 			for (int j = 0; j < mNumCols; ++j) {
@@ -348,7 +348,7 @@ public:
 		return 1;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		assert(i == 0);
 		return mNode;
 	}
@@ -367,7 +367,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = -" + generator.getVar(mNode.get()).getVarName();
 	}
 
@@ -393,7 +393,7 @@ public:
 		return 2;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		if(i == 0) return mNodeA;
 		if(i == 1) return mNodeB;
 
@@ -412,7 +412,7 @@ public:
 	NodeBinaryOperationBasic (Sp<const Node<S>> nodeA, Sp<const Node<S>> nodeB)
 		: NodeBinaryOperation<S>(nodeA, nodeB) {}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(this->mNodeB.get()).getVarName();
 	}
 
@@ -573,7 +573,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName()
 				+ " = pow(" + generator.getVar(this->mNodeA.get()).getVarName()
 				+ ", " + generator.getVar(this->mNodeB.get()).getVarName() + ")";
@@ -599,7 +599,7 @@ public:
 		return 1;
 	}
 
-	virtual Sp<const Node<S>> getChild(size_t i) const {
+	virtual Sp<const NodeBase> getChild(size_t i) const {
 		assert(i == 0);
 		return mNode;
 	}
@@ -620,7 +620,7 @@ public:
 		return false;
 	}
 
-	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+	virtual std::string generateCode(const CodeGenerator &generator) const {
 		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
 	}
 

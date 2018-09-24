@@ -89,7 +89,7 @@ std::string generateEnergyCodeADR(F &&f, A&&... a)
 {
 	ADR energy = std::forward<F>(f)(std::forward<A>(a)...);
 	RecType<double> E = energy.value();
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	E.addToGeneratorAsResult(generator, energyName);
 	generator.sortNodes();
 	return generator.generateCode();
@@ -101,7 +101,7 @@ std::string generateEnergyCodeADDR(F &&f, A&&... a)
 {
 	ADDR energy = std::forward<F>(f)(std::forward<A>(a)...);
 	RecType<double> E = energy.value().value();
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	E.addToGeneratorAsResult(generator, energyName);
 	generator.sortNodes();
 	return generator.generateCode();
@@ -110,7 +110,7 @@ std::string generateEnergyCodeADDR(F &&f, A&&... a)
 template<typename F, typename... A>
 std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a)
 {
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	for (int i = 0; i < variables.size(); i++)
 	{
 		(*variables[i]).deriv() = 1;
@@ -127,7 +127,7 @@ std::string generateGradientCode(const VarListX<ADR> &variables, F &&f, A&&... a
 template<typename F, typename... A>
 std::string generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
 {
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 	for (int i = 0; i < variables.size(); i++)
 	{
 		(*variables[i]).deriv() = 1;
@@ -144,7 +144,7 @@ std::string generateGradientCode(const VarListX<ADDR> &variables, F &&f, A&&... 
 template<typename F, typename... A>
 std::string generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
 {
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 
 	for (int i = 0; i < variables.size(); i++)
 	{
@@ -172,7 +172,7 @@ std::string generateGradientAndHessianCode(const VarListX<ADDR> &variables, F &&
 template<typename F, typename... A>
 std::string generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a)
 {
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 
 	for (int i = 0; i < variables.size(); i++)
 	{
@@ -195,7 +195,7 @@ std::string generateHessianCode(const VarListX<ADDR> &variables, F &&f, A&&... a
 template<typename F, typename... A>
 std::string generateJacobianCode(const VarListX<ADDR> &firstVariables, const VarListX<ADDR> &secondVariables, F &&f, A&&... a)
 {
-	CodeGenerator<double> generator;
+	CodeGenerator generator;
 
 	for (int i = 0; i < firstVariables.size(); i++)
 	{

@@ -153,7 +153,7 @@ public:
 	}
 
 	std::string generateCode(std::string resVarName = "res", std::string functionName = "compute_extern") const {
-		CodeGenerator<S> generator;
+		CodeGenerator generator;
 		Node<S>* nodeRes = new NodeOut<S>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
@@ -162,7 +162,7 @@ public:
 		return generator.generateCode(functionName);
 	}
 
-	void addToGeneratorAsResult(CodeGenerator<S> &generator, const std::string &resVarName) {
+	void addToGeneratorAsResult(CodeGenerator &generator, const std::string &resVarName) {
 		Node<S>* nodeRes = new NodeOut<S>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
@@ -239,7 +239,7 @@ private:
 };
 
 template<class S>
-void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, -1, -1> &mat, CodeGenerator<S> &generator, const std::string &varName) {
+void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, -1, -1> &mat, CodeGenerator &generator, const std::string &varName) {
 
 	NodeOutMat<S>* nodeOutMat = new NodeOutMat<S>(varName, mat.rows(), mat.cols());
 
@@ -253,7 +253,7 @@ void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, -1, -1> &mat, CodeGe
 }
 
 template<int N, class S>
-void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, -1> &v, CodeGenerator<S> &generator, const std::string &varName) {
+void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, -1> &v, CodeGenerator &generator, const std::string &varName) {
 
 	NodeOutVec<S>* nodeOutVec = new NodeOutVec<S>(varName, v.size());
 
@@ -265,7 +265,7 @@ void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, -1> &v, CodeGener
 }
 
 template<int N, int M, class S>
-void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, M> &mat, CodeGenerator<S> &generator, const std::string &varName) {
+void addToGeneratorAsResult(const Eigen::Matrix<RecType<S>, N, M> &mat, CodeGenerator &generator, const std::string &varName) {
 
 	NodeOutMat<S>* nodeOutMat = new NodeOutMat<S>(varName, mat.rows(), mat.cols());
 
