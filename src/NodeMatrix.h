@@ -18,33 +18,85 @@ namespace AutoGen {
  *
  *
  */
-template<int Ni, int Mi, int No, int Mo>
-class NodeMatrix : public Node<Matrix<No, Mo>>
+template<int M, int N>
+class NodeMatrix : public Node<Matrix<M, N>>
 {
 public:
 	NodeMatrix() {}
 
 	// Return the evaluated value of this node
-	virtual Matrix<No, Mo> evaluate() const = 0;
+//	virtual Matrix<M, N> evaluate() const = 0;
 
-	virtual bool evaluate(Matrix<No, Mo> &value) const = 0;
+//	virtual bool evaluate(Matrix<M, N> &value) const = 0;
 };
 
-template<class MatrixIn, class MatrixOut>
-class NodeMatrixM : public NodeMatrix<MatrixIn::sizeN, MatrixIn::sizeM, MatrixOut::sizeN, MatrixOut::sizeM>
+template<class Mat>
+class NodeMatrixM : public NodeMatrix<Mat::sizeM, Mat::sizeN>
 {
 public:
 	NodeMatrixM() {}
 
 	// Return the evaluated value of this node
-	virtual MatrixOut evaluate() const = 0;
+//	virtual Mat evaluate() const = 0;
 
-	virtual bool evaluate(MatrixOut &value) const = 0;
+//	virtual bool evaluate(Mat &value) const = 0;
 };
 
 
-template<class MatrixIn, class MatrixOut>
-class NodeMatrixVar : public NodeMatrixM<MatrixIn, MatrixOut>
+template<class Mat>
+class NodeMatrixConst : public NodeMatrixM<Mat>
+{
+public:
+	NodeMatrixConst (const Mat &mat)
+		: mMat(mat) {
+		this->init();
+	}
+
+	virtual size_t getNumChildren() const {
+		return 0;
+	}
+
+	virtual Sp<const NodeBase> getChild(size_t i) const {
+		throw std::logic_error("NodeConst does not have any children");
+	}
+
+
+	virtual Mat evaluate() const {
+		return mMat;
+	}
+
+	virtual bool evaluate(Mat &value) const {
+		value = mMat;
+		return true;
+	}
+
+	virtual std::string generateCode(const CodeGenerator &generator) const {
+		std::ostringstream stream;
+		stream << "Matrix " << generator.getVar(this).getVarName() << " = " << mMat;
+		return stream.str();
+	}
+
+	virtual std::string getVarType() const {
+		return "Matrix &";
+	}
+
+	virtual uint64_t computeHash() const {
+		std::hash<double> hashS;
+		uint64_t res = 0;
+		for (int i = 0; i < Mat::sizeM; ++i) {
+			for (int j = 0; j < Mat::sizeN; ++j)
+				res += hashS(mMat(i, j));
+		}
+		return res;
+	}
+
+protected:
+	Mat mMat;
+};
+
+
+template<class Mat>
+class NodeMatrixVar : public NodeMatrixM<Mat>
 {
 public:
 	NodeMatrixVar (const std::string &varName)
@@ -61,12 +113,12 @@ public:
 	}
 
 
-	virtual MatrixOut evaluate() const {
+	virtual Mat evaluate() const {
 		throw std::logic_error("cannot evaluate a variable name");
-		return MatrixOut(0);
+		return Mat(0);
 	}
 
-	virtual bool evaluate(MatrixOut &value) const {
+	virtual bool evaluate(Mat &value) const {
 		return false;
 	}
 
@@ -95,12 +147,12 @@ protected:
 	std::string mVarName;
 };
 
-template<class MI, class MO>
-class NodeMatrixOut : public NodeMatrixVar<MI, MO>
+template<class Mat>
+class NodeMatrixOut : public NodeMatrixVar<Mat>
 {
 public:
-	NodeMatrixOut (const std::string &varName, Sp<const NodeMatrixM<MI, MO>> node)
-		: mNode(node), NodeMatrixVar<MI, MO>(varName) {
+	NodeMatrixOut (const std::string &varName, Sp<const NodeMatrixM<Mat>> node)
+		: mNode(node), NodeMatrixVar<Mat>(varName) {
 		this->init();
 	}
 
@@ -131,8 +183,78 @@ public:
 	}
 
 private:
-	Sp<const NodeMatrixM<MI, MO>> mNode;
+	Sp<const NodeMatrixM<Mat>> mNode;
 };
 
+template<class MatInA, class MatInB, class MatOut>
+class NodeMatrixBinaryOperation : public NodeMatrixM<MatOut>
+{
+public:
+	NodeMatrixBinaryOperation (Sp<const NodeMatrixM<MatInA>> nodeA, Sp<const NodeMatrixM<MatInB>> nodeB)
+		: mNodeA(nodeA), mNodeB(nodeB){}
+
+	virtual size_t getNumChildren() const {
+		return 2;
+	}
+
+	virtual Sp<const NodeBase> getChild(size_t i) const {
+		if(i == 0) return mNodeA;
+		if(i == 1) return mNodeB;
+
+		throw std::logic_error("NodeBinaryOperation has only two children");
+	}
+
+protected:
+	Sp<const NodeMatrixM<MatInA>> mNodeA;
+	Sp<const NodeMatrixM<MatInB>> mNodeB;
+};
+
+template<class MatInA, class MatInB, class MatOut>
+class NodeMatrixBinaryOperationBasic : public NodeMatrixBinaryOperation<MatInA, MatInB, MatOut>
+{
+public:
+	NodeMatrixBinaryOperationBasic (Sp<const NodeMatrixM<MatInA>> nodeA, Sp<const NodeMatrixM<MatInB>> nodeB)
+		: NodeMatrixBinaryOperation<MatInA, MatInB, MatOut> (nodeA, nodeB) {}
+
+	virtual std::string generateCode(const CodeGenerator &generator) const {
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(this->mNodeB.get()).getVarName();
+	}
+
+	virtual std::string getOpName() const = 0;
+};
+
+template<class MatInA, class MatInB, class MatOut>
+class NodeMatrixAdd : public NodeMatrixBinaryOperationBasic<MatInA, MatInB, MatOut>
+{
+public:
+
+	NodeMatrixAdd(Sp<const NodeMatrixM<MatInA>> nodeA, Sp<const NodeMatrixM<MatInB>> nodeB)
+		: NodeMatrixBinaryOperationBasic<MatInA, MatInB, MatOut> (nodeA, nodeB) {
+		this->init();
+	}
+
+	virtual MatOut evaluate() const {
+		return this->mNodeA->evaluate() + this->mNodeB->evaluate();
+	}
+
+	virtual bool evaluate(MatOut &value) const {
+		MatInA valA;
+		MatInB valB;
+		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
+		{
+			value = valA + valB;
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string getOpName() const { return "+"; }
+
+	virtual uint64_t computeHash() const {
+		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 3) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const { return 2; }
+};
 
 }

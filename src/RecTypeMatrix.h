@@ -10,23 +10,54 @@
 
 namespace AutoGen {
 
-template<class MI, class MO>
+template<class Mat>
 class RecTypeMatrix
 {
 public:
 
+	RecTypeMatrix(Sp<const NodeMatrixM<Mat>> node)
+		: mNode(node) {
+
+	}
+
 	RecTypeMatrix(const std::string &varName) {
-		mNode = Sp<NodeMatrixVar<MI, MO>>(new NodeMatrixVar<MI, MO>(varName));
+		mNode = Sp<NodeMatrixVar<Mat>>(new NodeMatrixVar<Mat>(varName));
+	}
+
+	RecTypeMatrix(const Mat &mat) {
+		mNode = Sp<NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(mat));
+	}
+
+	RecTypeMatrix<Mat> operator+(const RecTypeMatrix<Mat> &other) const {
+
+		Sp<const NodeMatrixM<Mat>> node(new NodeMatrixAdd<Mat, Mat, Mat>(mNode, other.mNode));
+
+		Mat value;
+
+		// constant expression?
+		if(node->evaluate(value)){
+			return RecTypeMatrix<Mat>(Sp<const NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(value)));
+		}
+//		// 0+x = x
+//		if(mNode->evaluate(value) && (value == 0 || value == -0)){
+//			return other;
+//		}
+//		// x+0 = x
+//		if(other.mNode->evaluate(value) && (value == 0)){
+//			return RecType<S>(this->mNode);
+//		}
+
+		return RecTypeMatrix<Mat>(node);
 	}
 
 	void addToGeneratorAsResult(CodeGenerator &generator, const std::string &resVarName) {
-		NodeBase* nodeRes = new NodeMatrixOut<MI, MO>(resVarName, mNode);
+		NodeBase* nodeRes = new NodeMatrixOut<Mat>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
 	}
 
 private:
-	std::shared_ptr<const NodeMatrixM<MI, MO>> mNode;
+	std::shared_ptr<const NodeMatrixM<Mat>> mNode;
 };
 
 //template<class S>
