@@ -69,7 +69,7 @@ public:
 
 	virtual S evaluate() const {
 		throw std::logic_error("cannot evaluate a variable name");
-		return 0;
+		return S(0);
 	}
 
 	virtual bool evaluate(S &value) const {
