@@ -16,8 +16,9 @@ public:
 		}
 	}
 
-	template<class S>
-	Matrix(S value) {
+//	Matri
+
+	Matrix(double value) {
 		for (int i = 0; i < M; ++i) {
 			for (int j = 0; j < N; ++j) {
 				data[i][j] = value;
@@ -43,6 +44,18 @@ public:
 		for (int i = 0; i < M; ++i) {
 			for (int j = 0; j < N; ++j)
 				res.data[i][j] = data[i][j] + other.data[i][j];
+		}
+		return res;
+	}
+
+	// MxN * NxO = MxO
+	template<int O>
+	Matrix<M, O> operator*(const Matrix<N, O> &other) const {
+		Matrix<M, O> res(0.0);
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < O; ++j)
+				for (int k = 0; k < N; ++k)
+					res.data[i][j] += data[i][k] * other.data[k][j];
 		}
 		return res;
 	}

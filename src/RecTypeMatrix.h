@@ -28,9 +28,13 @@ public:
 		mNode = Sp<NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(mat));
 	}
 
+	std::shared_ptr<const NodeMatrixM<Mat>> getNode() const {
+		return mNode;
+	}
+
 	RecTypeMatrix<Mat> operator+(const RecTypeMatrix<Mat> &other) const {
 
-		Sp<const NodeMatrixM<Mat>> node(new NodeMatrixAdd<Mat, Mat, Mat>(mNode, other.mNode));
+		Sp<const NodeMatrixM<Mat>> node(new NodeMatrixAdd<Mat>(mNode, other.mNode));
 
 		Mat value;
 
@@ -48,6 +52,50 @@ public:
 		}
 
 		return RecTypeMatrix<Mat>(node);
+	}
+
+	// this * other = MatOut
+	// MxN  * NxO   = MxO
+	template<int O>
+	RecTypeMatrix<Matrix<Mat::sizeM, O>> operator*(const RecTypeMatrix<Matrix<Mat::sizeN, O>> &other) const {
+
+		typedef Matrix<Mat::sizeM, O> MatOut;
+
+		Sp<const NodeMatrixM<MatOut>> node(new NodeMatrixMul<Mat::sizeN, MatOut>(mNode, other.getNode()));
+
+//		S value;
+//		// evaluatable?
+//		if(node->evaluate(value)) {
+//			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(value)));
+//		}
+//		// 0*x or 0*x = 0
+//		if((mNode->evaluate(value) && value == 0) || (other.mNode->evaluate(value) && value == 0)){
+//			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(0)));
+//		}
+//		// 1*x = x
+//		if(mNode->evaluate(value) && value == 1){
+//			return RecType<S>(other.mNode);
+//		}
+//		// x*1 = x
+//		if(other.mNode->evaluate(value) && value == 1){
+//			return RecType<S>(mNode);
+//		}
+//		// -1*x = -x
+//		if(mNode->evaluate(value) && value == -1)
+//			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(other.mNode)));
+//		// x*-1 = -x
+//		if(other.mNode->evaluate(value) && value == -1)
+//			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(mNode)));
+
+		return RecTypeMatrix<MatOut>(node);
+	}
+
+	// this * other = MatOut
+	// MxN  * NxO   = MxO
+	template<int O>
+	RecTypeMatrix<Matrix<Mat::sizeM, O>> operator*(const Matrix<Mat::sizeN, O> &other) const {
+		RecTypeMatrix<Matrix<Mat::sizeN, O>> otherR(other);
+		return *this * otherR;
 	}
 
 	void addToGeneratorAsResult(CodeGenerator &generator, const std::string &resVarName) {

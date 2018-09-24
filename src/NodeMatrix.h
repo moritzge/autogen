@@ -36,6 +36,10 @@ class NodeMatrixM : public NodeMatrix<Mat::sizeM, Mat::sizeN>
 public:
 	NodeMatrixM() {}
 
+	std::string getVarTypeName() const {
+		return "Matrix<" + std::to_string(Mat::sizeM) + "," + std::to_string(Mat::sizeN) + ">";
+	}
+
 	// Return the evaluated value of this node
 //	virtual Mat evaluate() const = 0;
 
@@ -72,12 +76,12 @@ public:
 
 	virtual std::string generateCode(const CodeGenerator &generator) const {
 		std::ostringstream stream;
-		stream << "Matrix " << generator.getVar(this).getVarName() << " = " << mMat;
+		stream << NodeMatrixM<Mat>::getVarTypeName() << " " << generator.getVar(this).getVarName() << " = " << mMat;
 		return stream.str();
 	}
 
 	virtual std::string getVarType() const {
-		return "Matrix &";
+		return "Matrix<" + std::to_string(Mat::sizeM) + "," + std::to_string(Mat::sizeN) + "> &";
 	}
 
 	virtual uint64_t computeHash() const {
@@ -123,7 +127,7 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator &generator) const {
-		return "Matrix " + generator.getVar(this).getVarName() + " = " + mVarName;
+		return NodeMatrixM<Mat>::getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + mVarName;
 	}
 
 	virtual NodeType getNodeType() const {
@@ -135,7 +139,7 @@ public:
 	}
 
 	virtual std::string getVarType() const {
-		return "Matrix &";
+		return NodeMatrixM<Mat>::getVarTypeName() + " &";
 	}
 
 	virtual uint64_t computeHash() const {
@@ -171,10 +175,6 @@ public:
 
 	virtual NodeType getNodeType() const {
 		return NodeType::OUTPUT_NODE;
-	}
-
-	virtual std::string getVarType() const {
-		return "Matrix &";
 	}
 
 	virtual uint64_t computeHash() const {
@@ -217,19 +217,19 @@ public:
 		: NodeMatrixBinaryOperation<MatInA, MatInB, MatOut> (nodeA, nodeB) {}
 
 	virtual std::string generateCode(const CodeGenerator &generator) const {
-		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(this->mNodeB.get()).getVarName();
+		return NodeMatrixM<MatOut>::getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(this->mNodeA.get()).getVarName() + " " + getOpName() + " " + generator.getVar(this->mNodeB.get()).getVarName();
 	}
 
 	virtual std::string getOpName() const = 0;
 };
 
-template<class MatInA, class MatInB, class MatOut>
-class NodeMatrixAdd : public NodeMatrixBinaryOperationBasic<MatInA, MatInB, MatOut>
+template<class MatOut>
+class NodeMatrixAdd : public NodeMatrixBinaryOperationBasic<MatOut, MatOut, MatOut>
 {
 public:
 
-	NodeMatrixAdd(Sp<const NodeMatrixM<MatInA>> nodeA, Sp<const NodeMatrixM<MatInB>> nodeB)
-		: NodeMatrixBinaryOperationBasic<MatInA, MatInB, MatOut> (nodeA, nodeB) {
+	NodeMatrixAdd(Sp<const NodeMatrixM<MatOut>> nodeA, Sp<const NodeMatrixM<MatOut>> nodeB)
+		: NodeMatrixBinaryOperationBasic<MatOut, MatOut, MatOut> (nodeA, nodeB) {
 		this->init();
 	}
 
@@ -238,8 +238,8 @@ public:
 	}
 
 	virtual bool evaluate(MatOut &value) const {
-		MatInA valA;
-		MatInB valB;
+		MatOut valA;
+		MatOut valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA + valB;
@@ -256,5 +256,45 @@ public:
 
 	virtual uint64_t getHashId() const { return 2; }
 };
+
+// MatInA * MatInB = MatOut
+// MxN    * NxO    = MxO
+template<int N, class MatOut>
+class NodeMatrixMul : public NodeMatrixBinaryOperationBasic<Matrix<MatOut::sizeM, N>, Matrix<N, MatOut::sizeN>, MatOut>
+{
+	typedef Matrix<MatOut::sizeM, N> MatInA;
+	typedef Matrix<N, MatOut::sizeN> MatInB;
+
+public:
+
+	NodeMatrixMul(Sp<const NodeMatrixM<MatInA>> nodeA, Sp<const NodeMatrixM<MatInB>> nodeB)
+		: NodeMatrixBinaryOperationBasic<MatInA, MatInB, MatOut> (nodeA, nodeB) {
+		this->init();
+	}
+
+	virtual MatOut evaluate() const {
+		return this->mNodeA->evaluate() * this->mNodeB->evaluate();
+	}
+
+	virtual bool evaluate(MatOut &value) const {
+		MatInA valA;
+		MatInB valB;
+		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
+		{
+			value = valA * valB;
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string getOpName() const { return "*"; }
+
+	virtual uint64_t computeHash() const {
+		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 3) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const { return 4; }
+};
+
 
 }
