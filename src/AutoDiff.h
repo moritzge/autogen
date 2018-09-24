@@ -11,9 +11,6 @@ public:
 	AutoDiff() {
 	}
 
-//	AutoDiff() {
-//	}
-
 	template<class T>
 	AutoDiff(const T &c) : m_x((Value)c), m_d((Deriv)0)	{
 	}
@@ -97,28 +94,9 @@ public:
 	const Deriv &deriv() const { return m_d; }
 	Deriv &deriv() { return m_d; }
 
-	virtual std::string getGeneratedType()
-	{
-		std::string currentType = typeid(m_d).name();
-
-		// We assume the innerest node hase a value like double or float
-		int start = currentType.find_last_of('<') + 1;
-		std::string typeAndTail = currentType.substr(start);
-
-		int end = typeAndTail.find_first_of('>');
-		std::string type = typeAndTail.substr(0, end);
-
-		return type;
-	}
-
-	std::string getName() const {
-		return m_name;
-	}
-
 private:
 	Value m_x;			// value
 	Deriv m_d;			// derivative
-	std::string m_name;
 };
 
 template<class Value, class Deriv>
