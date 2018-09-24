@@ -29,6 +29,15 @@ public:
 		return data[i][j];
 	}
 
+	bool operator==(const Matrix<M, N> &other) const {
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < N; ++j)
+				if(data[i][j] != other.data[i][j])
+					return false;
+		}
+		return true;
+	}
+
 	Matrix<M, N> operator+(const Matrix<M, N> &other) const {
 		Matrix<M, N> res;
 		for (int i = 0; i < M; ++i) {

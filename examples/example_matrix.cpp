@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
 
 	std::cout << mat << std::endl;
 
-	RMatrix y(mat);
-	RMatrix x = y+y;
+	RMatrix y(std::string("y"));
+	RMatrix x = y + y + Matrix<1,2>(0);
 
 	CodeGenerator codeGenerator;
 	x.addToGeneratorAsResult(codeGenerator, "x");

@@ -38,14 +38,14 @@ public:
 		if(node->evaluate(value)){
 			return RecTypeMatrix<Mat>(Sp<const NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(value)));
 		}
-//		// 0+x = x
-//		if(mNode->evaluate(value) && (value == 0 || value == -0)){
-//			return other;
-//		}
-//		// x+0 = x
-//		if(other.mNode->evaluate(value) && (value == 0)){
-//			return RecType<S>(this->mNode);
-//		}
+		// 0+x = x
+		if(mNode->evaluate(value) && (value == Mat(0))){
+			return other;
+		}
+		// x+0 = x
+		if(other.mNode->evaluate(value) && (value == 0)){
+			return RecTypeMatrix<Mat>(this->mNode);
+		}
 
 		return RecTypeMatrix<Mat>(node);
 	}
