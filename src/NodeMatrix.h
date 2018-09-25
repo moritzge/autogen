@@ -258,17 +258,30 @@ public:
 };
 
 // MatInA * MatInB = MatOut
-// MxN    * NxO    = MxO
-template<int N, class MatOut>
-class NodeMatrixMul : public NodeMatrixBinaryOperationBasic<Matrix<MatOut::sizeM, N>, Matrix<N, MatOut::sizeN>, MatOut>
+// MxN    * OxP    = QxR
+template<class MatA, class MatB, class MatOut>
+class NodeMatrixMul : public NodeMatrixBinaryOperationBasic<MatA, MatB, MatOut>
 {
-	typedef Matrix<MatOut::sizeM, N> MatInA;
-	typedef Matrix<N, MatOut::sizeN> MatInB;
+	static const int M = MatA::sizeM;
+	static const int N = MatA::sizeN;
+	static const int O = MatB::sizeM;
+	static const int P = MatB::sizeN;
+	static const int Q = MatOut::sizeM;
+	static const int R = MatOut::sizeN;
 
 public:
 
-	NodeMatrixMul(Sp<const NodeMatrixM<MatInA>> nodeA, Sp<const NodeMatrixM<MatInB>> nodeB)
-		: NodeMatrixBinaryOperationBasic<MatInA, MatInB, MatOut> (nodeA, nodeB) {
+	// Matrix-Matrix multiplication
+	// QxN * NxR = QxR
+	NodeMatrixMul(Sp<const NodeMatrixM<Matrix<Q, N>>> nodeA, Sp<const NodeMatrixM<Matrix<N, R>>> nodeB)
+		: NodeMatrixBinaryOperationBasic<Matrix<Q, N>, Matrix<N, R>, MatOut> (nodeA, nodeB) {
+		this->init();
+	}
+
+	// Matrix-Scalar multiplication, where Scalar = 1x1 Matrix
+	// QxR * 1x1 = QxR
+	NodeMatrixMul(Sp<const NodeMatrixM<Matrix<Q, R>>> nodeA, Sp<const NodeMatrixM<Matrix<1, 1>>> nodeB)
+		: NodeMatrixBinaryOperationBasic<Matrix<Q, R>, Matrix<1, 1>, MatOut> (nodeA, nodeB) {
 		this->init();
 	}
 
@@ -277,8 +290,8 @@ public:
 	}
 
 	virtual bool evaluate(MatOut &value) const {
-		MatInA valA;
-		MatInB valB;
+		MatA valA;
+		MatB valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA * valB;
@@ -290,7 +303,15 @@ public:
 	virtual std::string getOpName() const { return "*"; }
 
 	virtual uint64_t computeHash() const {
-		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 3) + getHashId();
+		// We use a different bit-shift for the `rol` function for each node, because matrix multiplication is not associative
+
+		bool isAssociative = false;
+		isAssociative |= (M == N && N == O && O == P);	// MatA and MatB both square and of same size
+		isAssociative |= M==1 && N==1;					// MatA is 1x1 Matrix
+		isAssociative |= O==1 && P==1;					// MatB is 1x1 Matrix
+
+		int dA = 3, dB = (isAssociative) ? 3 : 5; // bit-shifts for nodeA and nodeB
+		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 5) + getHashId();
 	}
 
 	virtual uint64_t getHashId() const { return 4; }

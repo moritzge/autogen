@@ -58,6 +58,17 @@ public:
 		return res;
 	}
 
+	// MxN * 1x1 = MxN
+//	template<int O>
+	Matrix<M, N> operator*(const Matrix<1, 1> &other) const {
+		Matrix<M, N> res(0.0);
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < N; ++j)
+				res.data[i][j] = data[i][j] * other.data[0][0];
+		}
+		return res;
+	}
+
 	double* getData() { return *data; }
 
 //private:
@@ -67,7 +78,7 @@ public:
 template<int M, int N>
 std::ostream& operator<<(std::ostream& stream, const Matrix<M, N> &mat) {
 
-	stream << "{ "; // << "(" << s.deriv() << ")";
+	stream << "{ ";
 
 	for (int i = 0; i < M; ++i) {
 		stream << "{ ";
@@ -76,7 +87,7 @@ std::ostream& operator<<(std::ostream& stream, const Matrix<M, N> &mat) {
 			if(j < N-1)
 				stream << ", ";
 		}
-		stream << "} ";
+		stream << " } ";
 	}
 
 	stream << "} ";

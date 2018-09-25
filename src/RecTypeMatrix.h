@@ -59,35 +59,13 @@ public:
 	template<int O>
 	RecTypeMatrix<Matrix<Mat::sizeM, O>> operator*(const RecTypeMatrix<Matrix<Mat::sizeN, O>> &other) const {
 
+		typedef Mat MatA;
+		typedef Matrix<Mat::sizeN, O> MatB;
 		typedef Matrix<Mat::sizeM, O> MatOut;
 
-		Sp<const NodeMatrixM<MatOut>> node(new NodeMatrixMul<Mat::sizeN, MatOut>(mNode, other.getNode()));
+		Sp<const NodeMatrixMul<MatA, MatB, MatOut>> node(new NodeMatrixMul<MatA, MatB, MatOut>(mNode, other.getNode()));
 
-//		S value;
-//		// evaluatable?
-//		if(node->evaluate(value)) {
-//			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(value)));
-//		}
-//		// 0*x or 0*x = 0
-//		if((mNode->evaluate(value) && value == 0) || (other.mNode->evaluate(value) && value == 0)){
-//			return RecType<S>(Sp<const Node<S>>(new NodeConst<S>(0)));
-//		}
-//		// 1*x = x
-//		if(mNode->evaluate(value) && value == 1){
-//			return RecType<S>(other.mNode);
-//		}
-//		// x*1 = x
-//		if(other.mNode->evaluate(value) && value == 1){
-//			return RecType<S>(mNode);
-//		}
-//		// -1*x = -x
-//		if(mNode->evaluate(value) && value == -1)
-//			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(other.mNode)));
-//		// x*-1 = -x
-//		if(other.mNode->evaluate(value) && value == -1)
-//			return RecType<S>(Sp<const Node<S>>(new NodeNeg<S>(mNode)));
-
-		return RecTypeMatrix<MatOut>(node);
+		return makeRecTypeMultiply(node);
 	}
 
 	// this * other = MatOut
@@ -98,15 +76,75 @@ public:
 		return *this * otherR;
 	}
 
+	// this * other = MatOut
+	// MxN  * 1x1   = MxN
+	RecTypeMatrix<Mat> operator*(const RecTypeMatrix<Matrix<1, 1>> &other) const {
+
+		typedef Mat MatA;
+		typedef Matrix<1, 1> MatB;
+		typedef Mat MatOut;
+
+		Sp<const NodeMatrixMul<MatA, MatB, MatOut>> node(new NodeMatrixMul<MatA, MatB, MatOut>(mNode, other.getNode()));
+
+		return makeRecTypeMultiply(node);
+	}
+
+	// this * Scalar
+	RecTypeMatrix<Mat> operator*(double other) const {
+		Matrix<1,1> mat; mat.data[0][0] = other;
+		RecTypeMatrix<Matrix<1, 1>> otherR(mat);
+		return *this * otherR;
+	}
+
+
 	void addToGeneratorAsResult(CodeGenerator &generator, const std::string &resVarName) {
 		NodeBase* nodeRes = new NodeMatrixOut<Mat>(resVarName, mNode);
 
 		generator.collectNodes(nodeRes);
 	}
 
+	template<class MatA, class MatB>
+	static RecTypeMatrix<Mat> makeRecTypeMultiply(Sp<const NodeMatrixMul<MatA, MatB, Mat>> node) {
+
+		Mat value;
+		// evaluatable?
+		if(node->evaluate(value)) {
+			return RecTypeMatrix<Mat>(Sp<const NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(value)));
+		}
+
+		return RecTypeMatrix<Mat>(node);
+	}
+
 private:
 	std::shared_ptr<const NodeMatrixM<Mat>> mNode;
 };
+
+
+template<class Mat>
+RecTypeMatrix<Mat> operator*(const RecTypeMatrix<Matrix<1, 1>> &b, const RecTypeMatrix<Mat> &a) {
+
+	typedef Mat MatA;
+	typedef Matrix<1, 1> MatB;
+	typedef Mat MatOut;
+
+	Sp<const NodeMatrixMul<MatA, MatB, MatOut>> node(new NodeMatrixMul<MatA, MatB, MatOut>(a.getNode(), b.getNode()));
+
+	return RecTypeMatrix<MatOut>::makeRecTypeMultiply(node);
+}
+
+template<class Mat>
+RecTypeMatrix<Mat> operator*(double value, const RecTypeMatrix<Mat> &a) {
+
+	typedef Mat MatA;
+	typedef Matrix<1, 1> MatB;
+	typedef Mat MatOut;
+
+	RecTypeMatrix<MatB> b((Matrix<1,1>(value)));
+
+	Sp<const NodeMatrixMul<MatA, MatB, MatOut>> node(new NodeMatrixMul<MatA, MatB, MatOut>(a.getNode(), b.getNode()));
+
+	return RecTypeMatrix<MatOut>::makeRecTypeMultiply(node);
+}
 
 //template<class S>
 //class RecType
