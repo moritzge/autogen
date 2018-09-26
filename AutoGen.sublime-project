@@ -1,0 +1,88 @@
+{
+	"build_systems":
+	[
+		{
+			"file_regex": "(.+[^:]):(\\d+):(\\d+): (?:fatal )?((?:error|warning): .+)$",
+			"name": "AutoGen (OSX)",
+			"shell_cmd": "make -j8",
+			"syntax": "Packages/CMakeBuilder/Syntax/Make.sublime-syntax",
+			"variants":
+			[
+				{
+					"name": "clean",
+					"shell_cmd": "make -j8 clean"
+				},
+				{
+					"name": "rebuild_cache",
+					"shell_cmd": "make -j8 rebuild_cache"
+				},
+				{
+					"name": "test",
+					"shell_cmd": "make -j8 test"
+				},
+				{
+					"name": "AutoGenLib",
+					"shell_cmd": "make -j8 AutoGenLib"
+				},
+				{
+					"name": "Tests-run-verbose",
+					"shell_cmd": "make -j8 Tests-run-verbose"
+				},
+				{
+					"name": "Tests",
+					"shell_cmd": "make -j8 Tests"
+				},
+				{
+					"name": "example_matrix",
+					"shell_cmd": "make -j8 example_matrix"
+				},
+				{
+					"name": "example_codegen-run",
+					"shell_cmd": "make -j8 example_codegen-run"
+				},
+				{
+					"name": "example_codegen_easy-run",
+					"shell_cmd": "make -j8 example_codegen_easy-run"
+				},
+				{
+					"name": "example_codegen",
+					"shell_cmd": "make -j8 example_codegen"
+				},
+				{
+					"name": "example_codegen_easy",
+					"shell_cmd": "make -j8 example_codegen_easy"
+				},
+				{
+					"name": "example_matrix-run",
+					"shell_cmd": "make -j8 example_matrix-run"
+				},
+				{
+					"name": "example_autodiff-run",
+					"shell_cmd": "make -j8 example_autodiff-run"
+				},
+				{
+					"name": "example_autodiff",
+					"shell_cmd": "make -j8 example_autodiff"
+				}
+			],
+			"working_dir": "${project_path}/build"
+		}
+	],
+	"folders":
+	[
+		{
+			"folder_exclude_patterns":
+			[
+				"build"
+			],
+			"path": "."
+		}
+	],
+	"settings":
+	{
+		"cmake":
+		{
+			"build_folder": "${project_path}/build"
+		}
+	}
+}

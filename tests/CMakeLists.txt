@@ -31,3 +31,10 @@ target_include_directories(
 
 enable_testing()
 add_test(${PROJECT_NAME} ${PROJECT_NAME})
+
+# add_custom_target(test-run COMMAND
+add_custom_target(Tests-run-verbose
+	COMMAND ctest -V
+	DEPENDS ${PROJECT_NAME}
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
