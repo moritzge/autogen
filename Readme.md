@@ -28,8 +28,20 @@ And a repo with the examples: [repo](https://gitlab.inf.ethz.ch/moritzge/autogen
 
 ## Todo
 
+- [ ] more symbolic simplification including different node types
+- [~] Nodes with Matrix in/output
+    - [x] addition
+    - [x] addition with scalar
+    - [x] multiplication
+    - [x] mult with scalar
+    - [x] transpose
+    - [ ] subtraction
+    - [ ] cross
+    - [ ] dot: this means to connect it with scalar nodes
+    - [ ] division/inverse
+    - [ ] connect everything neatly with scalar nodes/rectype
 - [ ] instead of writing code, evaluating expression graph
 - [ ] make benchmarks
 - [ ] check out template meta programming
-- [ ] more symbolic simplification including different node types
 - [ ] autodiff/autogen objective in scp
+

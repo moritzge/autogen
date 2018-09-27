@@ -37,6 +37,7 @@ public:
 		return true;
 	}
 
+	// MxN + MxN = MxN
 	Matrix<M, N> operator+(const Matrix<M, N> &other) const {
 		Matrix<M, N> res;
 		for (int i = 0; i < M; ++i) {
@@ -59,7 +60,6 @@ public:
 	}
 
 	// MxN * 1x1 = MxN
-//	template<int O>
 	Matrix<M, N> operator*(const Matrix<1, 1> &other) const {
 		Matrix<M, N> res(0.0);
 		for (int i = 0; i < M; ++i) {
@@ -69,11 +69,34 @@ public:
 		return res;
 	}
 
+	// MxN^T = NxM
+	Matrix<N, M> transpose() const {
+		Matrix<N,M> mat;
+		for (int i = 0; i < N; ++i)
+			for (int j = 0; j < N; ++j)
+				mat.data[i][j] = data[j][i];
+		return mat;
+	}
+
 	double* getData() { return *data; }
 
 //private:
 	double data[M][N];
 };
+
+template<int M, int N>
+Matrix<M, N> operator+(Matrix<M, N> a, Matrix<1, 1> b) {
+	Matrix<M, N> res;
+	for (int i = 0; i < M; ++i)
+		for (int j = 0; j < N; ++j)
+			res.data[i][j] = a.data[i][j] + b.data[0][0];	
+	return res;
+}
+
+template<int M, int N>
+Matrix<M, N> operator+(Matrix<1, 1> a, Matrix<M, N> b) {
+    return b+a;
+}
 
 template<int M, int N>
 std::ostream& operator<<(std::ostream& stream, const Matrix<M, N> &mat) {

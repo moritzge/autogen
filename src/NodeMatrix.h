@@ -186,6 +186,53 @@ private:
 	Sp<const NodeMatrixM<Mat>> mNode;
 };
 
+template<int M, int N>
+class NodeMatrixTranspose : public NodeMatrixM<Matrix<N, M>>
+{
+public:
+	typedef Matrix<M, N> MatIn;
+	typedef Matrix<N, M> MatOut;
+
+	NodeMatrixTranspose (Sp<const NodeMatrixM<MatIn>> node)
+		: mNode(node) {
+		this->init();
+	}
+
+	virtual size_t getNumChildren() const {
+		return 1;
+	}
+
+	virtual Sp<const NodeBase> getChild(size_t i) const {
+		return mNode;
+	}
+
+	virtual MatOut evaluate() const {
+		return mNode->evaluate().transpose();
+	}
+
+	virtual bool evaluate(MatOut &value) const {
+		MatIn mat;
+		if(mNode->evaluate(mat)){
+			value = mat.transpose();
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string generateCode(const CodeGenerator &generator) const {
+		return NodeMatrixM<MatOut>::getVarTypeName() + " " + generator.getVar(this).getVarName() + " = " + generator.getVar(mNode.get()).getVarName() + ".transpose()";
+	}
+
+	virtual uint64_t computeHash() const {
+		return this->rol(this->mNode->getHash(), 3) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const { return 6; }
+
+protected:
+	Sp<const NodeMatrixM<MatIn>> mNode;
+};
+
 template<class MatInA, class MatInB, class MatOut>
 class NodeMatrixBinaryOperation : public NodeMatrixM<MatOut>
 {
@@ -223,13 +270,20 @@ public:
 	virtual std::string getOpName() const = 0;
 };
 
-template<class MatOut>
-class NodeMatrixAdd : public NodeMatrixBinaryOperationBasic<MatOut, MatOut, MatOut>
+template<class MatA, class MatB, class MatOut>
+class NodeMatrixAdd : public NodeMatrixBinaryOperationBasic<MatA, MatB, MatOut>
 {
 public:
 
+	// Matrix + Matrix
 	NodeMatrixAdd(Sp<const NodeMatrixM<MatOut>> nodeA, Sp<const NodeMatrixM<MatOut>> nodeB)
 		: NodeMatrixBinaryOperationBasic<MatOut, MatOut, MatOut> (nodeA, nodeB) {
+		this->init();
+	}
+
+	// Matrix + Scalar
+	NodeMatrixAdd(Sp<const NodeMatrixM<MatOut>> nodeA, Sp<const NodeMatrixM<Matrix<1,1>>> nodeB)
+		: NodeMatrixBinaryOperationBasic<MatOut, Matrix<1, 1>, MatOut> (nodeA, nodeB) {
 		this->init();
 	}
 
@@ -238,8 +292,8 @@ public:
 	}
 
 	virtual bool evaluate(MatOut &value) const {
-		MatOut valA;
-		MatOut valB;
+		MatA valA;
+		MatB valB;
 		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
 		{
 			value = valA + valB;
