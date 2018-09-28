@@ -104,7 +104,7 @@ public:
 		return this->operator*<MatB, MatOut>(other);
 	}
 
-	RecTypeMatrix<Matrix<Mat::sizeN, Mat::sizeM>> transpose() {
+	RecTypeMatrix<Matrix<Mat::sizeN, Mat::sizeM>> transpose() const {
 		typedef Matrix<Mat::sizeN, Mat::sizeM> MatT;
 		Sp<const NodeMatrixM<MatT>> node(new NodeMatrixTranspose<Mat::sizeM, Mat::sizeN>(mNode));
 		return RecTypeMatrix<MatT>(node);

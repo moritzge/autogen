@@ -46,9 +46,9 @@ TEST(Matrix, MatrixClass) {
 	EXPECT_EQ((a*b).transpose(), b.transpose()*a.transpose());
 }
 
-template<class MatOut, class MatIn>
+template<class MatIn, class MatOut>
 MatOut compute_stuff(const MatIn &x) {
-	return (x + x);
+	return (x + x).transpose();
 }
 
 template <int M, int N> using RMat = AutoGen::RecTypeMatrix<AutoGen::Matrix<M, N>>;
@@ -61,7 +61,7 @@ TEST(RecTypeMatrix, SuperSimpleTest) {
 
 	// record computation
 	RMat<M, N> x("x");
-	RMat<M, N> y = compute_stuff<RMat<M,N>, RMat<M,N>>(x);
+	RMat<N, M> y = compute_stuff<RMat<M,N>, RMat<N,M>>(x);
 
 	// generate the code
 	CodeGenerator generator;
@@ -85,10 +85,10 @@ TEST(RecTypeMatrix, SuperSimpleTest) {
 
 	// test it!
 	{
-		Matrix<M, N> y;
+		Matrix<N, M> y;
 		Matrix<M, N> x;
 		compute_y(x.data[0], y.data[0]);
-		Matrix<M, N> y2 = compute_stuff<Matrix<M,N>, Matrix<M,N>>(x);
+		Matrix<N, M> y2 = compute_stuff<Matrix<M,N>, Matrix<N,M>>(x);
 		EXPECT_EQ(y, y2);
 	}
 }
