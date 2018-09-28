@@ -20,6 +20,8 @@
  *
  */
 
+#pragma once
+
 #include <dlfcn.h>
 #include <fstream>
 #include <cstdlib>

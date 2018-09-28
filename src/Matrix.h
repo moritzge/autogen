@@ -2,6 +2,8 @@
 
 #include <ostream>
 
+namespace AutoGen {
+
 template<int M, int N>
 class Matrix
 {
@@ -25,6 +27,10 @@ public:
 	}
 
 	double operator()(int i, int j) const {
+		return data[i][j];
+	}
+
+	double& operator()(int i, int j) {
 		return data[i][j];
 	}
 
@@ -73,7 +79,7 @@ public:
 	Matrix<N, M> transpose() const {
 		Matrix<N,M> mat;
 		for (int i = 0; i < N; ++i)
-			for (int j = 0; j < N; ++j)
+			for (int j = 0; j < M; ++j)
 				mat.data[i][j] = data[j][i];
 		return mat;
 	}
@@ -99,6 +105,11 @@ Matrix<M, N> operator+(Matrix<1, 1> a, Matrix<M, N> b) {
 }
 
 template<int M, int N>
+Matrix<M, N> operator*(Matrix<1, 1> a, Matrix<M, N> b) {
+	return b*a;
+}
+
+template<int M, int N>
 std::ostream& operator<<(std::ostream& stream, const Matrix<M, N> &mat) {
 
 	stream << "{ ";
@@ -110,10 +121,15 @@ std::ostream& operator<<(std::ostream& stream, const Matrix<M, N> &mat) {
 			if(j < N-1)
 				stream << ", ";
 		}
-		stream << " } ";
+		if(i < M-1)
+			stream << " }, ";
+		else
+			stream << " } ";
 	}
 
 	stream << "} ";
 
 	return stream;
 }
+
+} // namespace AutoGen

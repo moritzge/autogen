@@ -7,7 +7,7 @@
 #include <RecTypeMatrix.h>
 #include <NodeMatrix.h>
 
-template <int M, int N> using RMat = AutoGen::RecTypeMatrix<Matrix<M, N>>;
+template <int M, int N> using RMat = AutoGen::RecTypeMatrix<AutoGen::Matrix<M, N>>;
 
 int main(int argc, char *argv[])
 {
