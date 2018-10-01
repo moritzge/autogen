@@ -33,8 +33,20 @@
 					"shell_cmd": "make -j8 Tests"
 				},
 				{
+					"name": "example_RecTypeT",
+					"shell_cmd": "make -j8 example_RecTypeT"
+				},
+				{
+					"name": "example_RecTypeT-run",
+					"shell_cmd": "make -j8 example_RecTypeT-run"
+				},
+				{
 					"name": "example_matrix",
 					"shell_cmd": "make -j8 example_matrix"
+				},
+				{
+					"name": "example_codegen_easy",
+					"shell_cmd": "make -j8 example_codegen_easy"
 				},
 				{
 					"name": "example_codegen-run",
@@ -47,10 +59,6 @@
 				{
 					"name": "example_codegen",
 					"shell_cmd": "make -j8 example_codegen"
-				},
-				{
-					"name": "example_codegen_easy",
-					"shell_cmd": "make -j8 example_codegen_easy"
 				},
 				{
 					"name": "example_matrix-run",

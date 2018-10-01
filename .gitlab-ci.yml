@@ -8,4 +8,4 @@ build-autogen:
   - cd build
   - cmake ..
   - make
-  - ./tests/Tests
+  - make Tests-run-verbose

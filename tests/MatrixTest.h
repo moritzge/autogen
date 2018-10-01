@@ -84,7 +84,7 @@ TEST(RecTypeMatrix, SuperSimpleTest) {
 	// and wrap it in a function
 	std::string libCode =
 			"#include <cmath>\n"
-			"#include <Matrix.h>\n"
+			"#include \"../Matrix.h\"\n"
 			"using namespace AutoGen;\n"
 			"extern \"C\" " + code;
 
