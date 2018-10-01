@@ -32,12 +32,20 @@ TEST(Matrix, MatrixClass) {
 //	std::cout << "b^T = " << b.transpose() << std::endl;
 //	std::cout << "a*b = " << a*b << std::endl;
 
+	// addition
 	EXPECT_TRUE(a+a == a*2);
 	EXPECT_TRUE(2.0*a == a*2);
 	EXPECT_TRUE(2.0+a == a+2);
+
+	// subtraction
+	EXPECT_TRUE(a-a == 0);
+	EXPECT_TRUE(3*a - a == 2*a);
+
+	// multiplication
 	EXPECT_TRUE(2*a == a + a);
 	EXPECT_TRUE(2*a + a == a*3);
 
+	// transpose stuff
 	EXPECT_TRUE(a.transpose() == aTranspose);
 	EXPECT_TRUE(a*a.transpose() == (a*a.transpose()).transpose());
 	EXPECT_TRUE(a.transpose()*a == (a.transpose()*a).transpose());
@@ -48,7 +56,7 @@ TEST(Matrix, MatrixClass) {
 
 template<class MatIn, class MatOut>
 MatOut compute_stuff(const MatIn &x) {
-	return (x + x).transpose();
+	return (x + x - x).transpose();
 }
 
 template <int M, int N> using RMat = AutoGen::RecTypeMatrix<AutoGen::Matrix<M, N>>;
@@ -70,6 +78,8 @@ TEST(RecTypeMatrix, SuperSimpleTest) {
 
 	generator.sortNodes();
 	std::string code = generator.generateCode("compute_extern");
+
+	std::cout << code << std::endl;
 
 	// and wrap it in a function
 	std::string libCode =

@@ -68,6 +68,50 @@ public:
 		return *this + other;
 	}
 
+	template<class MatB>
+	RecTypeMatrix<Mat> operator-(const RecTypeMatrix<MatB> &other) const {
+
+		Sp<const NodeMatrixM<Mat>> node(new NodeMatrixSub<Mat, MatB, Mat>(mNode, other.getNode()));
+
+		Mat value;
+
+		// constant expression?
+		if(node->evaluate(value)){
+			return RecTypeMatrix<Mat>(Sp<const NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(value)));
+		}
+		// x-x = 0
+		if(mNode->getHash() == other.mNode->getHash()){
+			return RecTypeMatrix<Mat>(Sp<const NodeMatrixM<Mat>>(new NodeMatrixConst<Mat>(0)));
+		}
+
+
+
+
+		// // 0+x = x
+		// if(mNode->evaluate(value) && (value == Mat(0))){
+		// 	if(MatB::sizeM == 1 && MatB::sizeN==1)
+		// 		return RecTypeMatrix<Mat>(Sp<const NodeMatrixM<Mat> > node);
+		// }
+		MatB valueB;
+		// x+0 = x
+		if(other.getNode()->evaluate(valueB) && (valueB == 0)){
+			return RecTypeMatrix<Mat>(this->mNode);
+		}
+
+		return RecTypeMatrix<Mat>(node);
+	}
+
+	template<class MatB>
+	RecTypeMatrix<Mat> operator-(const MatB &matB) const {
+		RecTypeMatrix<MatB> other(matB);
+		return *this - other;
+	}
+
+	RecTypeMatrix<Mat> operator-(double scalar) const {
+		RecTypeMatrix<Mat> other(scalar);
+		return *this - other;
+	}
+
 	template<class MatB, class MatOut>
 	RecTypeMatrix<MatOut> operator*(const RecTypeMatrix<MatB> &other) const {
 
@@ -121,6 +165,7 @@ private:
 	std::shared_ptr<const NodeMatrixM<Mat>> mNode;
 };
 
+// TODO: is this needed??
 template<class Mat>
 RecTypeMatrix<Mat> operator+(const RecTypeMatrix<Matrix<1, 1>> &a, const RecTypeMatrix<Mat> &b) {
 	return a+b;
@@ -136,6 +181,18 @@ RecTypeMatrix<Mat> operator+(double value, const RecTypeMatrix<Mat> &b) {
 	RecTypeMatrix<MatB> a((Matrix<1,1>(value)));
 
 	return b+a;
+}
+
+template<class Mat>
+RecTypeMatrix<Mat> operator-(double value, const RecTypeMatrix<Mat> &b) {
+
+	typedef Mat MatA;
+	typedef Matrix<1, 1> MatB;
+	typedef Mat MatOut;
+
+	RecTypeMatrix<MatB> a((Matrix<1,1>(value)));
+
+	return a-b;
 }
 
 template<class Mat>

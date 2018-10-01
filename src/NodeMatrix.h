@@ -311,6 +311,47 @@ public:
 	virtual uint64_t getHashId() const { return 2; }
 };
 
+template<class MatA, class MatB, class MatOut>
+class NodeMatrixSub : public NodeMatrixBinaryOperationBasic<MatA, MatB, MatOut>
+{
+public:
+
+	// Matrix + Matrix
+	NodeMatrixSub(Sp<const NodeMatrixM<MatOut>> nodeA, Sp<const NodeMatrixM<MatOut>> nodeB)
+		: NodeMatrixBinaryOperationBasic<MatOut, MatOut, MatOut> (nodeA, nodeB) {
+		this->init();
+	}
+
+	// Matrix + Scalar
+	NodeMatrixSub(Sp<const NodeMatrixM<MatOut>> nodeA, Sp<const NodeMatrixM<Matrix<1,1>>> nodeB)
+		: NodeMatrixBinaryOperationBasic<MatOut, Matrix<1, 1>, MatOut> (nodeA, nodeB) {
+		this->init();
+	}
+
+	virtual MatOut evaluate() const {
+		return this->mNodeA->evaluate() - this->mNodeB->evaluate();
+	}
+
+	virtual bool evaluate(MatOut &value) const {
+		MatA valA;
+		MatB valB;
+		if(this->mNodeA->evaluate(valA) && this->mNodeB->evaluate(valB))
+		{
+			value = valA - valB;
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string getOpName() const { return "-"; }
+
+	virtual uint64_t computeHash() const {
+		return this->rol(this->mNodeA->getHash(), 3) + this->rol(this->mNodeB->getHash(), 3) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const { return 3; }
+};
+
 // MatInA * MatInB = MatOut
 // MxN    * OxP    = QxR
 template<class MatA, class MatB, class MatOut>

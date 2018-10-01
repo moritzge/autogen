@@ -53,6 +53,16 @@ public:
 		return res;
 	}
 
+	// MxN - MxN = MxN
+	Matrix<M, N> operator-(const Matrix<M, N> &other) const {
+		Matrix<M, N> res;
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < N; ++j)
+				res.data[i][j] = data[i][j] - other.data[i][j];
+		}
+		return res;
+	}
+
 	// MxN * NxO = MxO
 	template<int O>
 	Matrix<M, O> operator*(const Matrix<N, O> &other) const {
@@ -102,6 +112,20 @@ Matrix<M, N> operator+(Matrix<M, N> a, Matrix<1, 1> b) {
 template<int M, int N>
 Matrix<M, N> operator+(Matrix<1, 1> a, Matrix<M, N> b) {
     return b+a;
+}
+
+template<int M, int N>
+Matrix<M, N> operator-(Matrix<M, N> a, Matrix<1, 1> b) {
+	Matrix<M, N> res;
+	for (int i = 0; i < M; ++i)
+		for (int j = 0; j < N; ++j)
+			res.data[i][j] = a.data[i][j] - b.data[0][0];
+	return res;
+}
+
+template<int M, int N>
+Matrix<M, N> operator-(Matrix<1, 1> a, Matrix<M, N> b) {
+	return Matrix<M,N>(a(0,0)) - b;
 }
 
 template<int M, int N>
