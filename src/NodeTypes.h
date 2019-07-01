@@ -185,6 +185,33 @@ private:
 };
 
 template<class S>
+class NodeUnaryOperation : public Node<S>
+{
+public:
+	NodeUnaryOperation (Sp<const Node<S>> node)
+		: mNode(node) {}
+
+	virtual size_t getNumChildren() const {
+		return 1;
+	}
+
+	virtual Sp<const Node<S>> getChild(size_t i) const {
+		if(i == 0) return mNode;
+
+		throw std::logic_error("NodeUnaryOperation has only two children");
+	}
+
+	virtual uint64_t computeHash() const {
+		return this->rol(mNode->getHash(), 13) + getHashId();
+	}
+
+	virtual uint64_t getHashId() const = 0;
+
+protected:
+	Sp<const Node<S>> mNode;
+};
+
+template<class S>
 class NodeBinaryOperation : public Node<S>
 {
 public:
@@ -389,31 +416,19 @@ public:
 };
 
 template<class S>
-class NodeSqrt : public Node<S>
+class NodeSqrt : public NodeUnaryOperation<S>
 {
 public:
 	NodeSqrt (Sp<const Node<S>> node)
-		: mNode(node) {
-		this->init();
-	}
-
-	virtual size_t getNumChildren() const {
-		return 1;
-	}
-
-	virtual Sp<const Node<S>> getChild(size_t i) const {
-		assert(i == 0);
-		return mNode;
-	}
-
+		: NodeUnaryOperation<S>(node) {}
 
 	virtual S evaluate() const {
-		return sqrt(mNode->evaluate());
+		return sqrt(NodeUnaryOperation<S>::mNode->evaluate());
 	}
 
 	virtual bool evaluate(S &value) const {
 		S val;
-		if(mNode->evaluate(val))
+		if(NodeUnaryOperation<S>::mNode->evaluate(val))
 		{
 			value = sqrt(val);
 			return true;
@@ -422,18 +437,66 @@ public:
 	}
 
 	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
-		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = sqrt(" + generator.getVar(mNode.get()).getVarName() + ")";
-	}
-
-	virtual uint64_t computeHash() const {
-		return this->rol(mNode->getHash(), 13) + getHashId();
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = sqrt(" + generator.getVar(NodeUnaryOperation<S>::mNode.get()).getVarName() + ")";
 	}
 
 	virtual uint64_t getHashId() const { return 7; }
+};
 
-private:
-	Sp<const Node<S>> mNode;
+template<class S>
+class NodeCos : public NodeUnaryOperation<S>
+{
+public:
+	NodeCos (Sp<const Node<S>> node)
+		: NodeUnaryOperation<S>(node){}
 
+	virtual S evaluate() const {
+		return cos(NodeUnaryOperation<S>::mNode->evaluate());
+	}
+
+	virtual bool evaluate(S &value) const {
+		S val;
+		if(NodeUnaryOperation<S>::mNode->evaluate(val))
+		{
+			value = cos(val);
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = cos(" + generator.getVar(NodeUnaryOperation<S>::mNode.get()).getVarName() + ")";
+	}
+
+	virtual uint64_t getHashId() const { return 8; }
+};
+
+template<class S>
+class NodeSin : public NodeUnaryOperation<S>
+{
+public:
+	NodeSin (Sp<const Node<S>> node)
+		: NodeUnaryOperation<S>(node){}
+
+	virtual S evaluate() const {
+		return sin(NodeUnaryOperation<S>::mNode->evaluate());
+	}
+
+	virtual bool evaluate(S &value) const {
+		S val;
+		if(NodeUnaryOperation<S>::mNode->evaluate(val))
+		{
+			value = sin(val);
+			return true;
+		}
+		return false;
+	}
+
+	virtual std::string generateCode(const CodeGenerator<S> &generator) const {
+		return generator.getVarTypeName() + " " + generator.getVar(this).getVarName() + " = sin(" + generator.getVar(NodeUnaryOperation<S>::mNode.get()).getVarName() + ")";
+	}
+
+	virtual uint64_t getHashId() const { return 9; }
 };
 
 } // namespace AutoGen

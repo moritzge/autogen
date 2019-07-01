@@ -197,6 +197,17 @@ RecType<S> sqrt(const RecType<S> &other) {
 }
 
 template<class S>
+RecType<S> cos(const RecType<S> &other) {
+	return RecType<S>(Sp<const Node<S>>(new NodeCos<S>(other.getNode())));
+}
+
+template<class S>
+RecType<S> sin(const RecType<S> &other) {
+	return RecType<S>(Sp<const Node<S>>(new NodeSin<S>(other.getNode())));
+}
+
+
+template<class S>
 RecType<S> pow(const RecType<S> &a, const RecType<S> &b) {
 	return RecType<S>(Sp<const Node<S>>(new NodePow<S>(a.getNode(), b.getNode())));
 }
