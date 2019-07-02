@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-#include <eigen3/Eigen/Eigen>
+#include <Eigen/Eigen>
 
 #include <utility>
 
