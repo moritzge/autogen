@@ -30,11 +30,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O1")
 
 find_package(Eigen3 REQUIRED)
 
-# Library
+add_subdirectory(ext)
 add_subdirectory(src)
 
 # Tests
-option(AUTOGEN_BUILD_TESTS TRUE "Build AutoGen tests")
+option(AUTOGEN_BUILD_TESTS "Build AutoGen tests" ON)
 message(STATUS "Building AutoGen Tests: ${AUTOGEN_BUILD_TESTS}")
 if (AUTOGEN_BUILD_TESTS)
 	enable_testing()
@@ -43,7 +43,7 @@ if (AUTOGEN_BUILD_TESTS)
 endif()
 
 # Examples
-option(AUTOGEN_BUILD_EXAMPLES FALSE "Build AutoGen examples")
+option(AUTOGEN_BUILD_EXAMPLES "Build AutoGen examples" OFF)
 message(STATUS "Building AutoGen Examples: ${AUTOGEN_BUILD_EXAMPLES}")
 if (AUTOGEN_BUILD_EXAMPLES)
 	add_subdirectory(examples)
