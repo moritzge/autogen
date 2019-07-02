@@ -8,7 +8,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 set (CMAKE_CXX_STANDARD 11)
 
-set(AUTOGEN_EIGEN_NO_DEBUG FALSE CACHE BOOL "Disable Eigen asserts")
+option(AUTOGEN_EIGEN_NO_DEBUG FALSE "Disable Eigen asserts")
 if (AUTOGEN_EIGEN_NO_DEBUG)
     add_definitions(-DEIGEN_NO_DEBUG)
 endif()
@@ -34,7 +34,7 @@ find_package(Eigen3 REQUIRED)
 add_subdirectory(src)
 
 # Tests
-set(AUTOGEN_BUILD_TESTS TRUE CACHE BOOL "Build AutoGen tests")
+option(AUTOGEN_BUILD_TESTS TRUE "Build AutoGen tests")
 message(STATUS "Building AutoGen Tests: ${AUTOGEN_BUILD_TESTS}")
 if (AUTOGEN_BUILD_TESTS)
 	enable_testing()
@@ -43,7 +43,7 @@ if (AUTOGEN_BUILD_TESTS)
 endif()
 
 # Examples
-set(AUTOGEN_BUILD_EXAMPLES FALSE CACHE BOOL "Build AutoGen examples")
+option(AUTOGEN_BUILD_EXAMPLES FALSE "Build AutoGen examples")
 message(STATUS "Building AutoGen Examples: ${AUTOGEN_BUILD_EXAMPLES}")
 if (AUTOGEN_BUILD_EXAMPLES)
 	add_subdirectory(examples)
