@@ -1,4 +1,4 @@
-image: moritzge/cmake-gtest-eigen
+image: rikorose/gcc-cmake
 
 before_script:
  
