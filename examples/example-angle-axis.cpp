@@ -1989,11 +1989,54 @@ void generateCode_ddR(){
     std::cout << generator.generateCode() << std::endl;
 }
 
+void generateCode_dddR(){
+    typedef RecType<double> Rt;
+    typedef AutoDiff<Rt, Rt> AD;
+    typedef AutoDiff<AD, AD> ADD;
+
+    // record computation
+    Vector3<ADD> v;
+    for (int i = 0; i < 3; ++i) {
+        v[i] = Rt("v[" + std::to_string(i) + "]");
+    }
+
+    CodeGenerator<double> generator;
+
+    // compute gradient and add to code gen
+    {
+        Tensor5<Rt, 3,3,3,3,3> dddR;
+        for (int h = 0; h < 3; ++h) {
+            v(h).deriv().value() = 1.0;
+            for (int i = 0; i < 3; ++i) {
+                v(i).value().deriv() = 1.0;
+                Tensor3<ADD,3,3,3> dR = AngleAxis::dR<ADD>(v);
+                for (int j = 0; j < 3; ++j)
+                    for (int k = 0; k < 3; ++k)
+                        for (int l = 0; l < 3; ++l){
+                            dddR[h][i][j](k,l) = dR[j](k,l).deriv().deriv();
+                            dddR[h][i][j](k,l).addToGeneratorAsResult(generator, "dddR_["
+                                                                                   + std::to_string(h) + "]["
+                                                                                   + std::to_string(i) + "]["
+                                                                                   + std::to_string(j) + "]("
+                                                                                   + std::to_string(k) + ","
+                                                                                   + std::to_string(l) + ")");
+                        }
+                v(i).value().deriv() = 1.0;
+            }
+            v(h).deriv().value() = 0.0;
+        }
+    }
+
+    generator.sortNodes();
+
+    std::cout << generator.generateCode() << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
 
 //    generateCode_dR();
-    generateCode_ddR();
+    generateCode_dddR();
 
 //    {
 //        const Vector3d v = {1,0,0};
