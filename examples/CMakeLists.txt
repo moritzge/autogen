@@ -35,7 +35,7 @@ target_include_directories(Example4 PUBLIC ${EIGEN3_INCLUDE_DIR})
 
 # example angle axis
 set(app-name "example-angle-axis")
-add_executable(${app-name} example-angle-axis.cpp)
+add_executable(${app-name} example-angle-axis.cpp angle-axis-cg.h)
 set_target_properties(${app-name} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${app-name} AutoGenLib)
 target_include_directories(${app-name} PUBLIC ${EIGEN3_INCLUDE_DIR})
