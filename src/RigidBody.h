@@ -57,4 +57,17 @@ struct RigidBody {
         return dJw_dtheta(ExpCoords::R(theta), ExpCoords::dR(theta), ExpCoords::ddR(theta));
     }
 
+    template<class T>
+    static Vector3<T> omega(const Vector3<T> &theta, const Vector3<T> &theta_dot)
+    {
+        return Jw(theta) * theta_dot;
+    }
+
+    template<class T>
+    static Matrix3<T> domega_dtheta(const Vector3<T> &theta, const Vector3<T> &theta_dot)
+    {
+        return dJw_dtheta(theta) * theta_dot;
+    }
+
+
 };
