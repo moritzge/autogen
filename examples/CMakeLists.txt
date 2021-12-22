@@ -33,6 +33,13 @@ set_target_properties(Example4 PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(Example4 AutoGenLib)
 target_include_directories(Example4 PUBLIC ${EIGEN3_INCLUDE_DIR})
 
+# example angle axis
+set(app-name "example-angle-axis")
+add_executable(${app-name} example-angle-axis.cpp angle-axis-cg.h)
+set_target_properties(${app-name} PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(${app-name} AutoGenLib)
+target_include_directories(${app-name} PUBLIC ${EIGEN3_INCLUDE_DIR})
+
 # example exp coords cg
 set(app-name "example-ddR-cg")
 add_executable(${app-name} example-ddR-cg.cpp ExpCoords.h)
