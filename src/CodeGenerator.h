@@ -155,7 +155,7 @@ public:
 		mNodes = nodesNew2;
 	}
 
-	std::string generateCode() {
+    std::string generateCode(std::string beforeEveryLine = "") {
 
 		// update variable index
 		int counter = 0;
@@ -166,7 +166,7 @@ public:
 		// write code
 		std::string code;
 		for (size_t i = 0; i < mNodes.size(); ++i) {
-			code += mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
+            code += beforeEveryLine + mHashedNodes[mNodes[i]].first->generateCode(*this) + ";\n";
 		}
 
 		return code;
