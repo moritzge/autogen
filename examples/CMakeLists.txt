@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.0)
 # set name of the project
 project(Examples CXX)
 
-find_package(Eigen3 REQUIRED)
-
 # example1
 file(GLOB src_ex1 ${CMAKE_CURRENT_SOURCE_DIR}/example1.cpp)
 add_executable(Example1 ${src_ex1})
