@@ -27,6 +27,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O1")
 
 add_subdirectory(ext)
 add_subdirectory(src)
+add_subdirectory(codegen)
 
 # Tests
 option(AUTOGEN_BUILD_TESTS "Build AutoGen tests" ON)

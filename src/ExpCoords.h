@@ -76,16 +76,18 @@ struct ExpCoords
     template<class T>
     static Tensor4<T,3,3,3,3> ddR(const Vector3<T> &theta) {
 
-        Tensor4<T,3,3,3,3> ddR_;
+        Tensor4<T, 3,3,3,3> ddR;
 
         // compute gradient and add to code gen
         {
-            typedef AutoDiff<double, double> AD;
+            typedef AutoDiff<T, T> AD;
 
             // record computation
-            Vector3<AD> v = theta;
+            Vector3<AD> v;
+            for (int i = 0; i < 3; ++i) {
+                v[i] = theta[i];
+            }
 
-            Tensor4<AD, 3,3,3,3> ddR;
             for (int i = 0; i < 3; ++i) {
                 v(i).deriv() = 1.0;
                 Tensor3<AD,3,3,3> dR = ExpCoords::dR<AD>(v);
@@ -98,7 +100,7 @@ struct ExpCoords
             }
         }
 
-        return ddR_;
+        return ddR;
     }
 
 
